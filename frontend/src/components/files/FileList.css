@@ -1,0 +1,92 @@
+.empty-files {
+  text-align: center;
+  padding: 50px;
+  color: #666;
+}
+
+/* Grid View */
+.file-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 20px;
+}
+
+.file-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.file-card:hover {
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.file-icon {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+.file-info {
+  margin-top: 10px;
+}
+
+.file-name {
+  margin: 0 0 5px 0;
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-size {
+  margin: 0;
+  font-size: 12px;
+  color: #666;
+}
+
+/* List View */
+.file-list-table {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.file-list-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.file-list-table thead {
+  background: #f5f5f5;
+}
+
+.file-list-table th {
+  padding: 15px;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.file-list-table td {
+  padding: 15px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.file-list-table tbody tr:hover {
+  background: #f8f9ff;
+  cursor: pointer;
+}
+
+.file-icon-small {
+  font-size: 20px;
+  margin-right: 10px;
+}
