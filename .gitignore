@@ -1,0 +1,26 @@
+# Build outputs
+backend/target/
+frontend/build/
+
+# Dependencies
+frontend/node_modules/
+backend/backend.log
+backend/backend_mvn.log
+backend/backend_mvn_run.log
+backend/multicloud.log
+backend/backend.pid
+backend/backend_mvn.pid
+frontend/frontend.pid
+frontend/frontend_start.log
+frontend/frontend_start.log*
+
+# Environment & IDE
+*.env
+*.env.local
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+logs/
+*.log

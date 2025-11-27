@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './Auth.css';
@@ -8,40 +8,88 @@ const Login = () => {
     username: '',
     password: '',
   });
-  const [error, setError] = useState('');
+  const [localError, setLocalError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { login } = useAuth();
+  const { login, isAuthenticated, error: authError, clearError } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
+
+  // Clear errors when component unmounts
+  useEffect(() => {
+    return () => {
+      clearError();
+    };
+  }, [clearError]);
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
+    // Clear errors on input change
+    setLocalError('');
+    if (authError) {
+      clearError();
+    }
+  };
+
+  const validateForm = () => {
+    if (!formData.username.trim()) {
+      setLocalError('Username is required');
+      return false;
+    }
+    if (!formData.password) {
+      setLocalError('Password is required');
+      return false;
+    }
+    if (formData.password.length < 4) {
+      setLocalError('Password must be at least 4 characters');
+      return false;
+    }
+    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setLocalError('');
+    clearError();
+
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
 
     try {
       await login(formData);
-      navigate('/dashboard');
+      // Navigation will happen automatically via useEffect when isAuthenticated changes
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
+      console.error('Login error:', err);
+      const errorMessage = 
+        err.response?.data?.message || 
+        err.message || 
+        'Login failed. Please check your credentials and try again.';
+      setLocalError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
+
+  const displayError = localError || authError;
 
   return (
     <div className="auth-container">
       <div className="auth-card">
         <h2>Login to Multi-Cloud Storage</h2>
         
-        {error && <div className="error-message">{error}</div>}
+        {displayError && <div className="error-message">{displayError}</div>}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -51,8 +99,9 @@ const Login = () => {
               name="username"
               value={formData.username}
               onChange={handleChange}
-              required
               placeholder="Enter your username"
+              disabled={loading}
+              autoComplete="username"
             />
           </div>
 
@@ -63,8 +112,9 @@ const Login = () => {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              required
               placeholder="Enter your password"
+              disabled={loading}
+              autoComplete="current-password"
             />
           </div>
 

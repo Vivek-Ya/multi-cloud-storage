@@ -1,51 +1,125 @@
+
 .dashboard {
   min-height: 100vh;
-  background: #f5f5f5;
+  background: var(--bg-gradient);
+  color: var(--text-primary);
+  transition: background 0.5s ease, color 0.3s ease;
 }
 
 .dashboard-nav {
-  background: white;
+  background: var(--surface-1);
   padding: 20px 40px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 24px 45px var(--shadow-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
   position: sticky;
   top: 0;
   z-index: 100;
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--border-color);
+  transition: background 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
 }
 
-.dashboard-nav h1 {
+.dashboard-brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.dashboard-brand__logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  object-fit: cover;
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.18);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  background: var(--surface-2);
+}
+
+.dashboard-brand__text h1 {
   margin: 0;
-  color: #667eea;
+  color: var(--accent-primary);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  font-size: 1.45rem;
+}
+
+.dashboard-brand__subtitle {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  color: var(--text-secondary);
+  display: inline-block;
+  margin-top: 6px;
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 14px;
 }
 
-.btn-logout {
-  padding: 8px 16px;
-  background: #f44336;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+.user-info span {
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
+.btn-night-toggle {
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--button-secondary-border);
+  background: var(--button-secondary-bg);
+  color: var(--button-secondary-text);
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  letter-spacing: 0.3px;
+}
+
+.btn-night-toggle__icon {
+  font-size: 16px;
+}
+
+.btn-night-toggle:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px var(--shadow-color);
+}
+
+.btn-night-toggle.active {
+  background: linear-gradient(135deg, rgba(116, 249, 255, 0.15) 0%, rgba(102, 126, 234, 0.35) 100%);
+  border-color: transparent;
+  color: var(--accent-primary);
+}
+
+.btn-logout {
+  padding: 8px 18px;
+  background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+  color: white;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
 .btn-logout:hover {
-  background: #d32f2f;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(255, 65, 108, 0.35);
 }
 
 .success-banner {
-  background: #4caf50;
-  color: white;
+  background: linear-gradient(135deg, #00f5ff 0%, #7cffcb 100%);
+  color: #04202e;
   padding: 15px;
   text-align: center;
   font-weight: 600;
+  box-shadow: 0 18px 36px rgba(0, 245, 255, 0.2);
+  transition: background 0.4s ease;
 }
 
 .dashboard-container {
@@ -55,33 +129,53 @@
 
 .sidebar {
   width: 300px;
-  background: white;
-  padding: 20px;
-  border-right: 1px solid #e0e0e0;
+  background: var(--surface-1);
+  padding: 24px 20px;
+  border-right: 1px solid var(--border-color);
   overflow-y: auto;
+  backdrop-filter: blur(18px);
+  box-shadow: 14px 0 35px -24px var(--shadow-color);
+  transition: background 0.4s ease, border-color 0.4s ease;
 }
 
 .sidebar-section h3 {
   margin: 0 0 15px 0;
-  color: #333;
+  color: var(--text-secondary);
   font-size: 16px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
 }
 
-.btn-connect-cloud {
+.btn-connect-cloud,
+.btn-with-icon {
   width: 100%;
-  padding: 12px;
-  background: #667eea;
+  padding: 12px 16px;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 12px;
   cursor: pointer;
   font-weight: 600;
-  margin-bottom: 20px;
   transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: flex-start;
+  letter-spacing: 0.25px;
 }
 
-.btn-connect-cloud:hover {
-  background: #5568d3;
+.btn-with-icon {
+  width: auto;
+  justify-content: center;
+}
+
+.btn-label {
+  flex: 1;
+  text-align: left;
+}
+
+.btn-with-icon .btn-label {
+  text-align: center;
+  flex: 0 1 auto;
 }
 
 .cloud-accounts-list {
@@ -90,30 +184,52 @@
 
 .no-accounts {
   text-align: center;
-  color: #999;
+  color: var(--text-secondary);
   font-size: 14px;
   padding: 20px 0;
 }
 
 .main-content {
   flex: 1;
-  padding: 20px;
+  padding: 24px;
   overflow-y: auto;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 
 .empty-state {
   text-align: center;
   padding: 100px 20px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 24px 48px var(--shadow-color);
+}
+
+.empty-state__illustration {
+  width: clamp(140px, 22vw, 220px);
+  height: auto;
+  margin-bottom: 24px;
+  border-radius: 18px;
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.18);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  background: var(--surface-1);
+}
+
+body.night-mode .empty-state__illustration {
+  border-color: rgba(116, 249, 255, 0.35);
+  box-shadow: 0 24px 54px rgba(4, 223, 255, 0.22);
 }
 
 .empty-state h2 {
   margin: 0 0 15px 0;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .empty-state p {
   margin: 0 0 30px 0;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .btn-primary {
@@ -121,7 +237,7 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 12px;
   cursor: pointer;
   font-weight: 600;
   font-size: 16px;
@@ -130,4 +246,76 @@
 
 .btn-primary:hover {
   transform: translateY(-2px);
+}
+
+.btn-connect-cloud.dropbox {
+  background: linear-gradient(135deg, #0061ff 0%, #0040a0 100%);
+}
+
+.dropbox-btn {
+  background: linear-gradient(135deg, #0061ff 0%, #0040a0 100%);
+}
+
+.empty-state-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.connect-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.btn-connect-cloud.google {
+  background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+}
+
+.btn-connect-cloud.onedrive {
+  background: linear-gradient(135deg, #0078d4 0%, #00bcf2 100%);
+}
+
+.btn-connect-cloud.dropbox {
+  background: linear-gradient(135deg, #0061ff 0%, #0040a0 100%);
+}
+
+.btn-connect-cloud:hover,
+.btn-with-icon:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.18);
+}
+
+.google-btn {
+  background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+}
+
+.onedrive-btn {
+  background: linear-gradient(135deg, #0078d4 0%, #00bcf2 100%);
+}
+
+.dropbox-btn {
+  background: linear-gradient(135deg, #0061ff 0%, #0040a0 100%);
+}
+
+.btn-connect-cloud .icon,
+.btn-with-icon .icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.cloud-logo {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.18));
 }

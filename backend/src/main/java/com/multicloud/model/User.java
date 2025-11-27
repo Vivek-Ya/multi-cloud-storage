@@ -7,23 +7,17 @@ import java.util.Set;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+    @Index(name = "idx_username", columnList = "username"),
+    @Index(name = "idx_email", columnList = "email")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -42,14 +36,26 @@ public class User {
     @Column(nullable = false, name = "password_hash")
     private String passwordHash;
 
-    @Column(name = "first_name")
+    @Column(name = "first_name", length = 50)
     private String firstName;
 
-    @Column(name = "last_name")
+    @Column(name = "last_name", length = 50)
     private String lastName;
+
+    @Column(name = "profile_picture_url", length = 500)
+    private String profilePictureUrl;
+
+    @Column(name = "two_factor_enabled")
+    private Boolean twoFactorEnabled = false;
+
+    @Column(name = "two_factor_secret")
+    private String twoFactorSecret;
 
     @Column(name = "is_active")
     private Boolean isActive = true;
+
+    @Column(name = "last_login")
+    private LocalDateTime lastLogin;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -65,5 +71,18 @@ public class User {
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "role_id")
     )
+    @Builder.Default
     private Set<Role> roles = new HashSet<>();
+
+    // Helper methods
+    public String getFullName() {
+        if (firstName != null && lastName != null) {
+            return firstName + " " + lastName;
+        }
+        return username;
+    }
+
+    public void updateLastLogin() {
+        this.lastLogin = LocalDateTime.now();
+    }
 }

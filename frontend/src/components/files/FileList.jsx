@@ -1,7 +1,17 @@
 import React from 'react';
 import './FileList.css';
 
-const FileList = ({ files, view }) => {
+const FileList = ({
+  files,
+  view,
+  selectedFiles = [],
+  onSelectFile,
+  onSelectAll,
+  onDownload,
+  onDelete,
+  onRename,
+  onView,
+}) => {
   const formatBytes = (bytes) => {
     if (!bytes) return '0 Bytes';
     const k = 1024;
@@ -41,12 +51,70 @@ const FileList = ({ files, view }) => {
       <div className="file-grid">
         {files.map((file) => (
           <div key={file.id} className="file-card">
+            <input
+              type="checkbox"
+              className="file-checkbox"
+              checked={selectedFiles.includes(file.id)}
+              onChange={() => onSelectFile(file.id)}
+              onClick={(e) => e.stopPropagation()}
+            />
+
             <div className="file-icon">{getFileIcon(file.mimeType)}</div>
             <div className="file-info">
               <p className="file-name" title={file.fileName}>
                 {file.fileName}
               </p>
               <p className="file-size">{formatBytes(file.fileSize)}</p>
+            </div>
+
+            <div className="file-actions">
+              <button
+                type="button"
+                className="file-action-button"
+                title="View"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onView?.(file);
+                }}
+              >
+                👁️
+              </button>
+              <button
+                type="button"
+                className="file-action-button"
+                title="Download"
+                disabled={file.isFolder}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!file.isFolder) {
+                    onDownload?.(file);
+                  }
+                }}
+              >
+                ⬇️
+              </button>
+              <button
+                type="button"
+                className="file-action-button"
+                title="Rename"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRename?.(file);
+                }}
+              >
+                ✏️
+              </button>
+              <button
+                type="button"
+                className="file-action-button"
+                title="Delete"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete?.(file);
+                }}
+              >
+                🗑️
+              </button>
             </div>
           </div>
         ))}
@@ -59,10 +127,18 @@ const FileList = ({ files, view }) => {
       <table>
         <thead>
           <tr>
-            <th>Name</th>
+            <th>
+              <input
+                type="checkbox"
+                onChange={(e) => onSelectAll(e)}
+                checked={selectedFiles.length === files.length && files.length > 0}
+              />
+              Name
+            </th>
             <th>Size</th>
             <th>Modified</th>
             <th>Type</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -75,6 +151,45 @@ const FileList = ({ files, view }) => {
               <td>{formatBytes(file.fileSize)}</td>
               <td>{formatDate(file.modifiedAt)}</td>
               <td>{file.mimeType || 'Unknown'}</td>
+              <td className="file-actions-cell">
+                <button
+                  type="button"
+                  className="file-action-button"
+                  title="View"
+                  onClick={() => onView?.(file)}
+                >
+                  View
+                </button>
+                <button
+                  type="button"
+                  className="file-action-button"
+                  disabled={file.isFolder}
+                  title="Download"
+                  onClick={() => {
+                    if (!file.isFolder) {
+                      onDownload?.(file);
+                    }
+                  }}
+                >
+                  Download
+                </button>
+                <button
+                  type="button"
+                  className="file-action-button"
+                  title="Rename"
+                  onClick={() => onRename?.(file)}
+                >
+                  Rename
+                </button>
+                <button
+                  type="button"
+                  className="file-action-button delete"
+                  title="Delete"
+                  onClick={() => onDelete?.(file)}
+                >
+                  Delete
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>

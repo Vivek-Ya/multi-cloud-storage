@@ -5,41 +5,118 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import CloudAccountCard from './CloudAccountCard';
 import FileManager from '../files/FileManager';
 import './Dashboard.css';
+import { useNotifications } from '../../context/NotificationContext';
+import { providerLogos, appLogo, homeScreenLogo } from '../../assets/logos';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
-  const { cloudAccounts, fetchCloudAccounts, connectGoogleDrive } = useCloud();
+  const { cloudAccounts, fetchCloudAccounts, connectGoogleDrive, connectOneDrive, connectDropbox } = useCloud();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const { showNotification } = useNotifications();
+  const [isNightMode, setIsNightMode] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    const storedPreference = localStorage.getItem('night-mode');
+    if (storedPreference !== null) {
+      return storedPreference === 'true';
+    }
+
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    fetchCloudAccounts();
+  }, [fetchCloudAccounts]);
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.body.classList.toggle('night-mode', isNightMode);
+    }
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('night-mode', JSON.stringify(isNightMode));
+    }
+  }, [isNightMode]);
 
   useEffect(() => {
     // Check if returning from OAuth
     const connected = searchParams.get('connected');
     const error = searchParams.get('error');
 
-    if (connected === 'google') {
+    if (connected) {
+      const providerNames = {
+        google: 'Google Drive',
+        onedrive: 'OneDrive',
+        dropbox: 'Dropbox',
+      };
+      const providerName = providerNames[connected] ?? connected;
+      const successText = `Successfully connected to ${providerName}!`;
+      setSuccessMessage(successText);
       setShowSuccess(true);
+      showNotification(successText, 'success');
       fetchCloudAccounts();
       setTimeout(() => setShowSuccess(false), 5000);
+      window.history.replaceState({}, '', '/dashboard');
     }
 
     if (error) {
-      alert('Error connecting to cloud: ' + error);
+      showNotification(`Error connecting to cloud: ${error}`, 'error');
+      window.history.replaceState({}, '', '/dashboard');
     }
-  }, [searchParams]);
+  }, [searchParams, fetchCloudAccounts, showNotification]);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
+  const toggleNightMode = () => {
+    setIsNightMode((prev) => !prev);
+  };
+
+  const handleConnectGoogle = () => {
+    showNotification('Redirecting to Google Drive authorization...', 'info');
+    connectGoogleDrive();
+  };
+
+  const handleConnectOneDrive = () => {
+    showNotification('Redirecting to OneDrive authorization...', 'info');
+    connectOneDrive();
+  };
+
+  const handleConnectDropbox = () => {
+    showNotification('Redirecting to Dropbox authorization...', 'info');
+    connectDropbox();
+  };
+
   return (
     <div className="dashboard">
       <nav className="dashboard-nav">
-        <h1>Multi-Cloud Storage</h1>
+        <div className="dashboard-brand">
+          <img src={appLogo} alt="Multi-Cloud Storage logo" className="dashboard-brand__logo" />
+          <div className="dashboard-brand__text">
+            <h1>Multi-Cloud Storage</h1>
+            <span className="dashboard-brand__subtitle">Unified workspace for your files</span>
+          </div>
+        </div>
         <div className="user-info">
           <span>Welcome, {user?.username}!</span>
+          <button
+            type="button"
+            onClick={toggleNightMode}
+            className={`btn-night-toggle ${isNightMode ? 'active' : ''}`}
+            aria-pressed={isNightMode}
+          >
+            <span className="btn-night-toggle__icon" aria-hidden="true">
+              {isNightMode ? '☀️' : '🌙'}
+            </span>
+            {isNightMode ? 'Light Mode' : 'Night Mode'}
+          </button>
           <button onClick={handleLogout} className="btn-logout">
             Logout
           </button>
@@ -48,7 +125,7 @@ const Dashboard = () => {
 
       {showSuccess && (
         <div className="success-banner">
-          ✓ Successfully connected to Google Drive!
+          ✓ {successMessage}
         </div>
       )}
 
@@ -56,12 +133,38 @@ const Dashboard = () => {
         <aside className="sidebar">
           <div className="sidebar-section">
             <h3>Cloud Accounts</h3>
-            <button
-              className="btn-connect-cloud"
-              onClick={connectGoogleDrive}
-            >
-              + Connect Google Drive
-            </button>
+            
+            <div className="connect-buttons">
+              <button
+                className="btn-connect-cloud google"
+                onClick={handleConnectGoogle}
+              >
+                <span className="icon" aria-hidden="true">
+                  <img src={providerLogos.GOOGLE_DRIVE} alt="" className="cloud-logo" />
+                </span>
+                <span className="btn-label">Connect Google Drive</span>
+              </button>
+
+              <button
+                className="btn-connect-cloud onedrive"
+                onClick={handleConnectOneDrive}
+              >
+                <span className="icon" aria-hidden="true">
+                  <img src={providerLogos.ONEDRIVE} alt="" className="cloud-logo" />
+                </span>
+                <span className="btn-label">Connect OneDrive</span>
+              </button>
+
+              <button
+                className="btn-connect-cloud dropbox"
+                onClick={handleConnectDropbox}
+              >
+                <span className="icon" aria-hidden="true">
+                  <img src={providerLogos.DROPBOX} alt="" className="cloud-logo" />
+                </span>
+                <span className="btn-label">Connect Dropbox</span>
+              </button>
+            </div>
 
             <div className="cloud-accounts-list">
               {cloudAccounts.length === 0 ? (
@@ -80,14 +183,42 @@ const Dashboard = () => {
             <FileManager />
           ) : (
             <div className="empty-state">
+              <img
+                src={homeScreenLogo}
+                alt="Multi-Cloud workspace illustration"
+                className="empty-state__illustration"
+              />
               <h2>Welcome to Multi-Cloud Storage!</h2>
               <p>Connect your cloud accounts to get started.</p>
-              <button
-                className="btn-primary"
-                onClick={connectGoogleDrive}
-              >
-                Connect Google Drive
-              </button>
+              <div className="empty-state-buttons">
+                <button
+                  className="btn-primary google-btn btn-with-icon"
+                  onClick={handleConnectGoogle}
+                >
+                  <span className="icon" aria-hidden="true">
+                    <img src={providerLogos.GOOGLE_DRIVE} alt="" className="cloud-logo" />
+                  </span>
+                  <span className="btn-label">Connect Google Drive</span>
+                </button>
+                <button
+                  className="btn-primary onedrive-btn btn-with-icon"
+                  onClick={handleConnectOneDrive}
+                >
+                  <span className="icon" aria-hidden="true">
+                    <img src={providerLogos.ONEDRIVE} alt="" className="cloud-logo" />
+                  </span>
+                  <span className="btn-label">Connect OneDrive</span>
+                </button>
+                <button
+                  className="btn-primary dropbox-btn btn-with-icon"
+                  onClick={handleConnectDropbox}
+                >
+                  <span className="icon" aria-hidden="true">
+                    <img src={providerLogos.DROPBOX} alt="" className="cloud-logo" />
+                  </span>
+                  <span className="btn-label">Connect Dropbox</span>
+                </button>
+              </div>
             </div>
           )}
         </main>

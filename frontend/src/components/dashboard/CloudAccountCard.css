@@ -1,68 +1,295 @@
 .cloud-account-card {
-  background: white;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 15px;
-  margin-bottom: 10px;
+  --card-accent: var(--accent-primary);
+  background: var(--surface-1);
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  color: var(--text-primary);
+}
+
+.cloud-account-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(135deg, var(--card-accent) 0%, rgba(102, 126, 234, 0.65) 100%);
+  transform: scaleY(0);
+  transition: transform 0.3s ease;
 }
 
 .cloud-account-card:hover {
-  border-color: #667eea;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+  border-color: var(--card-accent);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+  transform: translateY(-2px);
+}
+
+.cloud-account-card:hover::before {
+  transform: scaleY(1);
 }
 
 .cloud-account-card.selected {
-  border-color: #667eea;
-  background: #f8f9ff;
+  border-color: var(--card-accent);
+  background: var(--surface-hover);
+  box-shadow: 0 4px 14px rgba(102, 126, 234, 0.25);
+}
+
+.cloud-account-card.selected::before {
+  transform: scaleY(1);
 }
 
 .account-header {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 15px;
 }
 
+.btn-account-action {
+  appearance: none;
+  border: 1px solid var(--border-color);
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-account-action:hover {
+  border-color: var(--card-accent);
+  color: var(--text-primary);
+  background: rgba(102, 126, 234, 0.08);
+}
+
+.btn-account-action:focus {
+  outline: none;
+  border-color: var(--card-accent);
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.18);
+}
+
+body.night-mode .btn-account-action {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(148, 163, 184, 0.35);
+  color: var(--text-secondary);
+}
+
+body.night-mode .btn-account-action:hover {
+  border-color: var(--card-accent);
+  color: var(--text-primary);
+  background: rgba(116, 249, 255, 0.12);
+}
+
 .provider-icon {
-  font-size: 24px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.18);
+  position: relative;
+  overflow: hidden;
+}
+
+.provider-logo {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.18));
+}
+
+body.night-mode .provider-icon {
+  background: rgba(116, 249, 255, 0.2);
+  box-shadow: 0 10px 26px rgba(4, 223, 255, 0.18);
+}
+
+.account-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .account-info h4 {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
+  margin: 0 0 4px 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
   text-transform: capitalize;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .account-email {
-  margin: 2px 0 0 0;
+  margin: 0;
   font-size: 12px;
-  color: #666;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 400;
 }
 
 .storage-info {
-  margin-top: 10px;
+  margin-top: 12px;
 }
 
 .storage-bar {
-  height: 6px;
-  background: #e0e0e0;
-  border-radius: 3px;
+  height: 8px;
+  background: rgba(15, 23, 42, 0.08);
+  border-radius: 4px;
   overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .storage-used {
   height: 100%;
   background: linear-gradient(90deg, #667eea, #764ba2);
-  transition: width 0.3s ease;
+  transition: width 0.4s ease, background 0.3s ease;
+  border-radius: 4px;
+  position: relative;
+}
+
+.storage-used::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .storage-text {
-  margin: 5px 0 0 0;
+  margin: 8px 0 0 0;
   font-size: 11px;
-  color: #666;
+  color: var(--text-secondary);
   text-align: right;
+  font-weight: 500;
+}
+
+/* Keyboard focus */
+.cloud-account-card:focus {
+  outline: none;
+  border-color: var(--card-accent);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.16);
+}
+
+/* Active state */
+.cloud-account-card:active {
+  transform: translateY(0);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .cloud-account-card {
+    padding: 14px;
+  }
+
+  .provider-icon {
+    font-size: 24px;
+  }
+
+  .account-info h4 {
+    font-size: 14px;
+  }
+
+  .account-email {
+    font-size: 11px;
+  }
+
+  .storage-bar {
+    height: 6px;
+  }
+
+  .storage-text {
+    font-size: 10px;
+  }
+}
+
+/* Animation for new cards */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.cloud-account-card {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Storage warning colors */
+.storage-used.warning {
+  background: linear-gradient(90deg, #ff9800, #ff5722);
+}
+
+.storage-used.danger {
+  background: linear-gradient(90deg, #f44336, #d32f2f);
+}
+
+.cloud-account-card.provider-google {
+  --card-accent: var(--google-accent);
+}
+
+.cloud-account-card.provider-google::before {
+  background: linear-gradient(140deg, var(--google-accent) 0%, var(--google-accent-alt) 60%, #fbbc05 85%, #ea4335 100%);
+}
+
+.cloud-account-card.provider-onedrive {
+  --card-accent: var(--onedrive-accent);
+}
+
+.cloud-account-card.provider-onedrive::before {
+  background: linear-gradient(140deg, var(--onedrive-accent) 0%, #1a9bff 50%, #58a6ff 100%);
+}
+
+.cloud-account-card.provider-dropbox {
+  --card-accent: var(--dropbox-accent);
+}
+
+.cloud-account-card.provider-dropbox::before {
+  background: linear-gradient(140deg, var(--dropbox-accent) 0%, #4f83ff 70%, #80b3ff 100%);
+}
+
+body.night-mode .cloud-account-card {
+  box-shadow: 0 18px 40px rgba(4, 223, 255, 0.08);
+}
+
+body.night-mode .cloud-account-card:hover {
+  box-shadow: 0 12px 32px rgba(116, 249, 255, 0.18);
+}
+
+body.night-mode .storage-bar {
+  background: rgba(148, 163, 184, 0.14);
+  box-shadow: inset 0 1px 3px rgba(15, 23, 42, 0.4);
 }

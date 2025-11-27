@@ -2,11 +2,16 @@ package com.multicloud.service;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
+import com.google.api.client.googleapis.auth.oauth2.GoogleRefreshTokenRequest;
 import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.FileContent;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.JsonParser;
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
@@ -36,12 +41,12 @@ public class GoogleDriveService {
 
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
     private static final List<String> SCOPES = Arrays.asList(
-            DriveScopes.DRIVE_FILE,
+            DriveScopes.DRIVE,
             "https://www.googleapis.com/auth/userinfo.email",
             "https://www.googleapis.com/auth/userinfo.profile"
     );
 
-    public String getAuthorizationUrl() throws Exception {
+        public String getAuthorizationUrl(String state) throws Exception {
         NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
 
         GoogleClientSecrets.Details details = new GoogleClientSecrets.Details();
@@ -57,9 +62,14 @@ public class GoogleDriveService {
                 .setApprovalPrompt("force")
                 .build();
 
-        return flow.newAuthorizationUrl()
-                .setRedirectUri(redirectUri)
-                .build();
+        com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeRequestUrl authUrl =
+                flow.newAuthorizationUrl().setRedirectUri(redirectUri);
+
+        if (state != null && !state.isEmpty()) {
+            authUrl.setState(state);
+        }
+
+        return authUrl.build();
     }
 
     public GoogleTokenResponse exchangeCode(String code) throws Exception {
@@ -120,16 +130,71 @@ public class GoogleDriveService {
         return file;
     }
 
-    public List<File> listFiles(String accessToken) throws Exception {
+        public List<File> listFiles(String accessToken) throws Exception {
         Drive driveService = getDriveService(accessToken);
 
         FileList result = driveService.files().list()
                 .setPageSize(100)
-                .setFields("files(id, name, mimeType, size, createdTime, modifiedTime, webViewLink, thumbnailLink)")
+                                .setFields("files(id, name, mimeType, size, parents, createdTime, modifiedTime, webViewLink, thumbnailLink)")
+                                .setQ("trashed = false")
                 .execute();
 
         return result.getFiles();
     }
+
+        public File createFolder(String accessToken, String folderName, String parentFolderId) throws Exception {
+                Drive driveService = getDriveService(accessToken);
+
+                File fileMetadata = new File();
+                fileMetadata.setName(folderName);
+                fileMetadata.setMimeType("application/vnd.google-apps.folder");
+
+                if (parentFolderId != null && !parentFolderId.trim().isEmpty()) {
+                        fileMetadata.setParents(Collections.singletonList(parentFolderId));
+                }
+
+                return driveService.files().create(fileMetadata)
+                                .setFields("id, name, mimeType, parents, createdTime, modifiedTime, webViewLink, thumbnailLink")
+                                .execute();
+        }
+
+        public Map<String, String> refreshAccessToken(String refreshToken) throws Exception {
+                NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+
+                GoogleTokenResponse response = new GoogleRefreshTokenRequest(
+                                httpTransport,
+                                JSON_FACTORY,
+                                refreshToken,
+                                clientId,
+                                clientSecret)
+                                .setGrantType("refresh_token")
+                                .execute();
+
+                Map<String, String> tokens = new HashMap<>();
+                if (response.getAccessToken() != null) {
+                        tokens.put("access_token", response.getAccessToken());
+                }
+                if (response.getRefreshToken() != null) {
+                        tokens.put("refresh_token", response.getRefreshToken());
+                }
+                if (response.getExpiresInSeconds() != null) {
+                        tokens.put("expires_in", response.getExpiresInSeconds().toString());
+                }
+
+                return tokens;
+        }
+
+        public File renameFile(String accessToken, String fileId, String newName) throws Exception {
+                Drive driveService = getDriveService(accessToken);
+
+                File fileMetadata = new File();
+                fileMetadata.setName(newName);
+
+                return driveService.files()
+                                .update(fileId, fileMetadata)
+                                .setFields("id, name, mimeType, size, parents, createdTime, modifiedTime, webViewLink, thumbnailLink")
+                                .execute();
+        }
 
     public ByteArrayOutputStream downloadFile(String accessToken, String fileId) throws Exception {
         Drive driveService = getDriveService(accessToken);
@@ -163,4 +228,26 @@ public class GoogleDriveService {
 
         return quota;
     }
+
+        public String getUserEmail(String accessToken) throws Exception {
+                NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+
+                GenericUrl url = new GenericUrl("https://www.googleapis.com/oauth2/v1/userinfo?alt=json");
+
+                HttpRequestFactory requestFactory = httpTransport.createRequestFactory();
+                HttpRequest request = requestFactory.buildGetRequest(url);
+                request.getHeaders().setAuthorization("Bearer " + accessToken);
+
+                String json = request.execute().parseAsString();
+
+                JsonParser parser = JSON_FACTORY.createJsonParser(json);
+                @SuppressWarnings("unchecked")
+                Map<String, Object> userInfo = parser.parse(Map.class);
+
+                if (userInfo != null && userInfo.get("email") != null) {
+                        return userInfo.get("email").toString();
+                }
+
+                return null;
+        }
 }

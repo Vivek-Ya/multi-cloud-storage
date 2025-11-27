@@ -1,0 +1,25 @@
+.btn-create-folder {
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.12) 0%, rgba(116, 249, 255, 0.18) 100%);
+  color: var(--accent-primary);
+  border: 1px dashed rgba(102, 126, 234, 0.42);
+  border-radius: 14px;
+  gap: 10px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
+}
+
+body.night-mode .btn-create-folder {
+  border-color: rgba(116, 249, 255, 0.45);
+  background: linear-gradient(135deg, rgba(116, 249, 255, 0.18) 0%, rgba(116, 249, 255, 0.24) 100%);
+  box-shadow: 0 14px 32px rgba(4, 223, 255, 0.2);
+}
+
+.btn-create-folder:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 36px rgba(116, 249, 255, 0.22);
+}

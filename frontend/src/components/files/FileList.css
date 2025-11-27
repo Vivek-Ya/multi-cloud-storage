@@ -1,7 +1,7 @@
 .empty-files {
   text-align: center;
   padding: 50px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 /* Grid View */
@@ -12,18 +12,19 @@
 }
 
 .file-card {
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  background: var(--surface-1);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
   padding: 20px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s;
+  color: var(--text-primary);
 }
 
 .file-card:hover {
-  border-color: #667eea;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--accent-primary);
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.12);
   transform: translateY(-2px);
 }
 
@@ -40,7 +41,7 @@
   margin: 0 0 5px 0;
   font-weight: 600;
   font-size: 14px;
-  color: #333;
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -49,14 +50,44 @@
 .file-size {
   margin: 0;
   font-size: 12px;
-  color: #666;
+  color: var(--text-secondary);
+}
+
+.file-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.file-action-button {
+  background: rgba(102, 126, 234, 0.12);
+  border: 1px solid rgba(102, 126, 234, 0.18);
+  color: var(--accent-primary);
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease, border 0.2s ease;
+}
+
+.file-action-button:hover:not(:disabled) {
+  background: rgba(102, 126, 234, 0.18);
+  transform: translateY(-1px);
+}
+
+.file-action-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* List View */
 .file-list-table {
-  background: white;
-  border-radius: 8px;
+  background: var(--surface-1);
+  border-radius: 12px;
   overflow: hidden;
+  border: 1px solid var(--border-color);
 }
 
 .file-list-table table {
@@ -65,28 +96,73 @@
 }
 
 .file-list-table thead {
-  background: #f5f5f5;
+  background: var(--surface-2);
 }
 
 .file-list-table th {
   padding: 15px;
   text-align: left;
   font-weight: 600;
-  color: #333;
-  border-bottom: 2px solid #e0e0e0;
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--border-color);
 }
 
 .file-list-table td {
   padding: 15px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-secondary);
 }
 
 .file-list-table tbody tr:hover {
-  background: #f8f9ff;
+  background: var(--surface-hover);
   cursor: pointer;
 }
 
 .file-icon-small {
   font-size: 20px;
   margin-right: 10px;
+}
+
+.file-actions-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.file-action-button.delete {
+  background: rgba(244, 63, 94, 0.12);
+  border-color: rgba(244, 63, 94, 0.38);
+  color: #f43f5e;
+}
+
+.file-action-button.delete:hover {
+  background: rgba(244, 63, 94, 0.18);
+}
+
+/* Checkbox styles */
+.file-checkbox {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.file-card {
+  position: relative;
+}
+
+.file-card:has(.file-checkbox:checked) {
+  background: rgba(102, 126, 234, 0.12);
+  border-color: var(--accent-primary);
+}
+
+/* Table checkbox */
+thead th input[type="checkbox"],
+tbody td input[type="checkbox"] {
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
 }
