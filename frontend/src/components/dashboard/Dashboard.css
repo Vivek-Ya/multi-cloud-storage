@@ -27,6 +27,13 @@ body.sidebar-open {
   transition: background 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
 }
 
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex: 1;
+}
+
 .dashboard-brand {
   display: flex;
   align-items: center;
@@ -64,26 +71,59 @@ body.sidebar-open {
   display: flex;
   align-items: center;
   gap: 14px;
+  margin-left: auto;
 }
 
 .btn-sidebar-toggle {
-  display: none;
-  padding: 8px 18px;
-  border-radius: 999px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   border: 1px solid var(--border-color);
   background: var(--surface-1);
   color: var(--text-primary);
-  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  letter-spacing: 0.3px;
 }
 
 .btn-sidebar-toggle:hover,
+.btn-sidebar-toggle:focus-visible,
 .btn-sidebar-toggle.active {
   border-color: var(--accent-primary);
   color: var(--accent-primary);
   box-shadow: 0 14px 30px var(--shadow-color);
+  outline: none;
+}
+
+.btn-sidebar-toggle__icon {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  gap: 6px;
+  width: 22px;
+}
+
+.btn-sidebar-toggle__icon span {
+  display: block;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.btn-sidebar-toggle.active .btn-sidebar-toggle__icon span:nth-child(1) {
+  transform: translateY(8px) rotate(45deg);
+}
+
+.btn-sidebar-toggle.active .btn-sidebar-toggle__icon span:nth-child(2) {
+  opacity: 0;
+}
+
+.btn-sidebar-toggle.active .btn-sidebar-toggle__icon span:nth-child(3) {
+  transform: translateY(-8px) rotate(-45deg);
 }
 
 .user-info span {
@@ -414,14 +454,13 @@ body.night-mode .empty-state__illustration {
     gap: 12px;
   }
 
-  .btn-sidebar-toggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+  .nav-left {
+    flex: 0 0 auto;
+    gap: 16px;
   }
 
   .user-info {
-    width: 100%;
+    flex: 1;
     justify-content: flex-end;
     flex-wrap: wrap;
     gap: 10px;
@@ -468,6 +507,11 @@ body.night-mode .empty-state__illustration {
     padding: 16px 20px;
   }
 
+  .nav-left {
+    width: 100%;
+    justify-content: space-between;
+  }
+
   .dashboard-brand {
     gap: 12px;
   }
@@ -486,19 +530,21 @@ body.night-mode .empty-state__illustration {
   }
 
   .user-info {
-    flex-direction: column;
-    align-items: flex-start;
+    width: 100%;
+    justify-content: flex-end;
+    align-items: flex-end;
     gap: 8px;
   }
 
   .user-info span {
+    width: 100%;
+    text-align: right;
     font-size: 0.9rem;
   }
 
   .btn-night-toggle,
   .btn-logout {
-    width: 100%;
-    justify-content: center;
+    width: auto;
   }
 
   .connect-buttons {
