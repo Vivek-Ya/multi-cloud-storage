@@ -244,11 +244,11 @@ const cloudService = {
   },
 
   // Copy file
-  copyFile: async (fileId, targetAccountId, targetPath) => {
+  copyFile: async (fileId, targetAccountId, targetFolderId = '') => {
     try {
       const response = await api.post(`/cloud-accounts/files/${fileId}/copy`, {
         targetAccountId,
-        targetPath,
+        targetFolderId,
       });
       return response.data;
     } catch (error) {

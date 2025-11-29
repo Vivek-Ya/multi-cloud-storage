@@ -8,6 +8,7 @@ import './FileManager.css';
 import DragDropZone from './DragDropZone';
 import { useNotifications } from '../../context/NotificationContext';
 import RenameModal from './RenameModal';
+import CopyModal from './CopyModal';
 import { providerLogos, appLogo } from '../../assets/logos';
 import { getProviderName } from '../../utils/helpers';
 
@@ -20,6 +21,8 @@ const FileManager = () => {
     deleteFile,
     renameFile,
     batchDeleteFiles,
+    copyFile: copyFileAction,
+    cloudAccounts,
   } = useCloud();
   const {
     showNotification,
@@ -30,6 +33,7 @@ const FileManager = () => {
   const [view, setView] = useState('grid');
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [renameTarget, setRenameTarget] = useState(null);
+  const [copyTarget, setCopyTarget] = useState(null);
 
   const resolveErrorMessage = (error, fallback) => {
     if (!error) {
@@ -137,6 +141,10 @@ const FileManager = () => {
 
   const handleRename = (file) => {
     setRenameTarget(file);
+  };
+
+  const handleCopy = (file) => {
+    setCopyTarget(file);
   };
 
   const handleDeleteSelected = async () => {
@@ -261,6 +269,7 @@ const FileManager = () => {
             onDownload={handleDownload}
             onDelete={handleDelete}
             onRename={handleRename}
+            onCopy={handleCopy}
             onView={handleView}
           />
         )}
@@ -290,6 +299,36 @@ const FileManager = () => {
             showNotification(message, 'error');
           } finally {
             setRenameTarget(null);
+          }
+        }}
+      />
+      <CopyModal
+        file={copyTarget}
+        accounts={cloudAccounts}
+        currentAccountId={selectedAccount?.id}
+        onClose={() => setCopyTarget(null)}
+        onSubmit={async (targetAccountId, targetFolderId) => {
+          if (!copyTarget) {
+            return;
+          }
+
+          showProgress({
+            title: 'Copying file...',
+            message: copyTarget.fileName,
+            status: 'pending',
+          });
+
+          try {
+            await copyFileAction(copyTarget.id, targetAccountId, targetFolderId);
+            completeProgress({ status: 'success', message: `${copyTarget.fileName} copied successfully.` });
+            showNotification(`${copyTarget.fileName} copied successfully.`, 'success');
+          } catch (error) {
+            console.error('Copy failed', error);
+            const message = resolveErrorMessage(error, 'Failed to copy file. Please try again.');
+            completeProgress({ status: 'error', message });
+            showNotification(message, 'error');
+          } finally {
+            setCopyTarget(null);
           }
         }}
       />

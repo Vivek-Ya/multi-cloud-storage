@@ -251,10 +251,10 @@ export const CloudProvider = ({ children }) => {
   }, [selectedAccount, currentPath, fetchFiles]);
 
   // Copy file
-  const copyFile = useCallback(async (fileId, targetAccountId, targetPath) => {
+  const copyFile = useCallback(async (fileId, targetAccountId, targetFolderId = '') => {
     try {
       setError(null);
-      await cloudService.copyFile(fileId, targetAccountId, targetPath);
+      await cloudService.copyFile(fileId, targetAccountId, targetFolderId);
       
       // Refresh files after copy
       if (selectedAccount) {

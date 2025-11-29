@@ -205,6 +205,16 @@ public class GoogleDriveService {
 
         return outputStream;
     }
+ 
+    public ByteArrayOutputStream exportFile(String accessToken, String fileId, String exportMimeType) throws Exception {
+        Drive driveService = getDriveService(accessToken);
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        driveService.files().export(fileId, exportMimeType)
+                .executeMediaAndDownloadTo(outputStream);
+
+                return outputStream;
+        }
 
     public void deleteFile(String accessToken, String fileId) throws Exception {
         Drive driveService = getDriveService(accessToken);

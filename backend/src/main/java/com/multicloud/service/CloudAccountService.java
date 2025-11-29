@@ -6,6 +6,7 @@ import com.multicloud.model.*;
 import com.multicloud.repository.CloudAccountRepository;
 import com.multicloud.repository.FileMetadataRepository;
 import com.multicloud.repository.UserRepository;
+import com.multicloud.util.InMemoryMultipartFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,15 @@ import java.util.stream.Collectors;
 public class CloudAccountService {
 
     private static final Logger logger = LoggerFactory.getLogger(CloudAccountService.class);
+
+    private static final Map<String, GoogleExportFormat> GOOGLE_EXPORT_FORMATS = Map.of(
+            "application/vnd.google-apps.document", new GoogleExportFormat(
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document", ".docx"),
+            "application/vnd.google-apps.spreadsheet", new GoogleExportFormat(
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ".xlsx"),
+            "application/vnd.google-apps.presentation", new GoogleExportFormat(
+                    "application/vnd.openxmlformats-officedocument.presentationml.presentation", ".pptx"),
+            "application/vnd.google-apps.drawing", new GoogleExportFormat("image/png", ".png"));
 
     @Autowired
     private CloudAccountRepository cloudAccountRepository;
@@ -406,6 +416,118 @@ public class CloudAccountService {
             logger.error("Error renaming file ID: {}", fileId, e);
             throw new Exception("Failed to rename file: " + e.getMessage());
         }
+    }
+
+    /**
+     * Copy a file from one cloud account to another
+     */
+    @Transactional
+    public FileDTO copyFile(Long fileId, Long targetAccountId, String targetFolderId, Long userId) throws Exception {
+        logger.info("Copying file ID: {} to target account ID: {}", fileId, targetAccountId);
+
+        FileMetadata sourceMetadata = fileMetadataRepository.findById(fileId)
+                .orElseThrow(() -> new RuntimeException("File not found with ID: " + fileId));
+
+        if (!Objects.equals(sourceMetadata.getUser().getId(), userId)) {
+            throw new IllegalArgumentException("You do not have permission to copy this file");
+        }
+
+        if (Boolean.TRUE.equals(sourceMetadata.getIsFolder())) {
+            throw new IllegalArgumentException("Copying folders is not supported yet");
+        }
+
+        CloudAccount sourceAccount = sourceMetadata.getCloudAccount();
+        CloudAccount targetAccount = cloudAccountRepository.findById(targetAccountId)
+                .orElseThrow(() -> new RuntimeException("Target cloud account not found with ID: " + targetAccountId));
+
+        if (!Objects.equals(targetAccount.getUser().getId(), userId)) {
+            throw new IllegalArgumentException("Target cloud account is not linked to the current user");
+        }
+
+        String effectiveFileName = sourceMetadata.getFileName() != null
+                ? sourceMetadata.getFileName()
+                : "copied-file";
+
+        String effectiveContentType = sourceMetadata.getMimeType() != null
+                ? sourceMetadata.getMimeType()
+                : "application/octet-stream";
+
+        ByteArrayOutputStream downloadedStream;
+
+        if (sourceAccount.getProviderName() == CloudProvider.GOOGLE_DRIVE
+                && isGoogleWorkspaceMimeType(sourceMetadata.getMimeType())) {
+            GoogleExportFormat exportFormat = resolveGoogleExportFormat(sourceMetadata.getMimeType());
+            effectiveContentType = exportFormat.mimeType();
+
+            downloadedStream = executeWithTokenRefresh(sourceAccount,
+                    token -> googleDriveService.exportFile(token, sourceMetadata.getCloudFileId(), exportFormat.mimeType()));
+
+            effectiveFileName = ensureFileExtension(effectiveFileName, exportFormat.extension());
+        } else {
+            downloadedStream = executeWithTokenRefresh(sourceAccount,
+                    token -> downloadFileForProvider(sourceAccount, sourceMetadata.getCloudFileId(), token));
+        }
+
+        byte[] fileBytes = downloadedStream.toByteArray();
+        if (fileBytes.length == 0) {
+            throw new IllegalStateException("Source file returned no data");
+        }
+
+        InMemoryMultipartFile inMemoryFile = new InMemoryMultipartFile(
+            effectiveFileName,
+            effectiveFileName,
+            effectiveContentType,
+            fileBytes
+        );
+
+        String normalizedTargetFolderId = (targetFolderId != null && !targetFolderId.isBlank())
+                ? targetFolderId.trim()
+                : null;
+
+        try {
+            FileDTO copiedFile = executeWithTokenRefresh(targetAccount,
+                    token -> uploadFileForProvider(targetAccount, inMemoryFile, normalizedTargetFolderId, token));
+
+            refreshStorageQuota(targetAccount);
+            targetAccount.setLastSynced(LocalDateTime.now());
+            cloudAccountRepository.save(targetAccount);
+
+            logger.info("Copied file '{}' to account {}", sourceMetadata.getFileName(), targetAccountId);
+            return copiedFile;
+        } catch (Exception e) {
+            logger.error("Failed to copy file ID: {} to account {}", fileId, targetAccountId, e);
+            throw new Exception("Failed to copy file: " + e.getMessage());
+        }
+    }
+
+    private boolean isGoogleWorkspaceMimeType(String mimeType) {
+        return mimeType != null && mimeType.startsWith("application/vnd.google-apps.");
+    }
+
+    private GoogleExportFormat resolveGoogleExportFormat(String mimeType) {
+        GoogleExportFormat format = GOOGLE_EXPORT_FORMATS.get(mimeType);
+        if (format != null) {
+            return format;
+        }
+
+        // Fallback to PDF for unhandled Google Workspace types
+        return new GoogleExportFormat("application/pdf", ".pdf");
+    }
+
+    private String ensureFileExtension(String fileName, String requiredExtension) {
+        if (fileName == null || fileName.isBlank()) {
+            return "copied-file" + requiredExtension;
+        }
+
+        String lowerFileName = fileName.toLowerCase(Locale.ROOT);
+        if (requiredExtension != null && !requiredExtension.isBlank() && !lowerFileName.endsWith(requiredExtension.toLowerCase(Locale.ROOT))) {
+            return fileName + requiredExtension;
+        }
+
+        return fileName;
+    }
+
+    private record GoogleExportFormat(String mimeType, String extension) {
     }
 
     /**

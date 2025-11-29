@@ -166,6 +166,31 @@ public class CloudAccountController {
         }
     }
 
+    // Copy file between accounts
+    @PostMapping("/files/{fileId}/copy")
+    public ResponseEntity<?> copyFile(
+            @PathVariable Long fileId,
+            @Valid @RequestBody FileCopyRequest request,
+            Authentication authentication) {
+        try {
+            User user = getUserFromAuthentication(authentication);
+            FileDTO copiedFile = cloudAccountService.copyFile(
+                    fileId,
+                    request.getTargetAccountId(),
+                    request.getTargetFolderId(),
+                    user.getId());
+            logger.info("File {} copied to account {}", fileId, request.getTargetAccountId());
+            return ResponseEntity.ok(copiedFile);
+        } catch (IllegalArgumentException ex) {
+            logger.warn("Copy validation failed for file {}: {}", fileId, ex.getMessage());
+            return ResponseEntity.badRequest().body(new MessageResponse(ex.getMessage()));
+        } catch (Exception e) {
+            logger.error("Copy failed for file: {}", fileId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Copy failed: " + e.getMessage()));
+        }
+    }
+
     // Create folder
     @PostMapping("/{accountId}/folder")
     public ResponseEntity<?> createFolder(
