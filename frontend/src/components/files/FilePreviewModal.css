@@ -1,0 +1,137 @@
+.preview-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.preview-modal {
+  background: #ffffff;
+  width: min(90vw, 960px);
+  max-height: 90vh;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
+}
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: linear-gradient(135deg, #f7f9fc, #ffffff);
+}
+
+.preview-meta h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.preview-meta span {
+  display: block;
+  color: #5f6a84;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.preview-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.preview-primary,
+.preview-secondary {
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.preview-primary {
+  background: #1f2937;
+  color: #ffffff;
+}
+
+.preview-secondary {
+  background: #e5e7eb;
+  color: #1f2937;
+}
+
+.preview-primary:hover,
+.preview-secondary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+}
+
+.preview-body {
+  flex: 1;
+  padding: 16px;
+  background: #f9fafb;
+  overflow: auto;
+}
+
+.preview-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  color: #4b5563;
+  font-weight: 500;
+}
+
+.preview-status {
+  text-align: center;
+  color: #4b5563;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+}
+
+.preview-frame {
+  width: 100%;
+  height: 70vh;
+  border: none;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.preview-media-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-height: 70vh;
+}
+
+.preview-media-container img {
+  max-width: 100%;
+  max-height: 70vh;
+  border-radius: 8px;
+  object-fit: contain;
+  background: #ffffff;
+}
+
+.preview-text {
+  text-align: left;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 16px;
+  max-height: 70vh;
+  overflow: auto;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.9rem;
+  color: #111827;
+}

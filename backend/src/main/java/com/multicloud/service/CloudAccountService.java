@@ -34,6 +34,15 @@ public class CloudAccountService {
                     "application/vnd.openxmlformats-officedocument.presentationml.presentation", ".pptx"),
             "application/vnd.google-apps.drawing", new GoogleExportFormat("image/png", ".png"));
 
+        private static final long INLINE_PREVIEW_MAX_BYTES = 6L * 1024 * 1024;
+        private static final Set<String> SIMPLE_TEXT_MIME_TYPES = Set.of(
+            "application/json",
+            "application/xml",
+            "application/javascript",
+            "text/csv",
+            "text/html",
+            "text/xml");
+
     @Autowired
     private CloudAccountRepository cloudAccountRepository;
 
@@ -355,6 +364,89 @@ public class CloudAccountService {
         }
     }
 
+    public FilePreviewResponse getFilePreview(Long fileId) throws Exception {
+        logger.info("Preparing preview for file ID: {}", fileId);
+
+        FileMetadata metadata = fileMetadataRepository.findById(fileId)
+                .orElseThrow(() -> new RuntimeException("File not found with ID: " + fileId));
+
+        if (Boolean.TRUE.equals(metadata.getIsFolder())) {
+            return finalizePreviewResponse(metadata, FilePreviewResponse.builder()
+                .fileId(fileId)
+                .fileName(metadata.getFileName())
+                .provider(metadata.getCloudAccount().getProviderName().toString())
+                .mimeType(metadata.getMimeType())
+                .fileSize(metadata.getFileSize())
+                .thumbnailUrl(metadata.getThumbnailUrl())
+                .previewAvailable(false)
+                .previewMode("UNSUPPORTED")
+                .message("Folders cannot be previewed")
+                .build());
+        }
+
+        CloudAccount account = metadata.getCloudAccount();
+
+        FilePreviewResponse.FilePreviewResponseBuilder builder = FilePreviewResponse.builder()
+                .fileId(fileId)
+                .fileName(metadata.getFileName())
+                .provider(account.getProviderName().toString())
+                .mimeType(metadata.getMimeType())
+                .fileSize(metadata.getFileSize())
+                .thumbnailUrl(metadata.getThumbnailUrl());
+
+        try {
+            if (account.getProviderName() == CloudProvider.GOOGLE_DRIVE
+                    && isGoogleWorkspaceMimeType(metadata.getMimeType())) {
+                return buildGoogleWorkspacePreview(account, metadata, builder);
+            }
+
+            if (shouldAttemptInline(metadata)) {
+                ByteArrayOutputStream stream = executeWithTokenRefresh(account,
+                        token -> downloadFileForProvider(account, metadata.getCloudFileId(), token));
+
+                byte[] fileBytes = stream.toByteArray();
+                if (fileBytes.length <= INLINE_PREVIEW_MAX_BYTES) {
+                    return buildInlinePreviewResponse(metadata, builder, fileBytes,
+                            metadata.getMimeType() != null ? metadata.getMimeType() : "application/octet-stream");
+                }
+            }
+
+            String externalLink = resolveExternalPreviewUrl(account, metadata);
+            if (externalLink != null) {
+                return finalizePreviewResponse(metadata, builder.previewAvailable(false)
+                    .previewMode("EXTERNAL_LINK")
+                    .previewUrl(externalLink)
+                    .message("Preview will open in a new browser tab.")
+                    .build());
+            }
+
+                return finalizePreviewResponse(metadata, builder.previewAvailable(false)
+                    .previewMode("UNSUPPORTED")
+                    .message("Preview is not supported for this file type.")
+                    .build());
+
+        } catch (Exception e) {
+            logger.error("Error preparing preview for file {}", fileId, e);
+
+            String fallbackUrl = null;
+            try {
+                fallbackUrl = resolveExternalPreviewUrl(account, metadata);
+            } catch (Exception nested) {
+                logger.warn("Failed to build fallback preview URL for file {}: {}", fileId, nested.getMessage());
+            }
+
+            if (fallbackUrl != null) {
+                return finalizePreviewResponse(metadata, builder.previewAvailable(false)
+                        .previewMode("EXTERNAL_LINK")
+                        .previewUrl(fallbackUrl)
+                        .message("Preview is not available inline. Please open in a new tab.")
+                        .build());
+            }
+
+            throw new Exception("Failed to prepare preview: " + e.getMessage());
+        }
+    }
+
     /**
      * Delete a file from cloud storage
      */
@@ -502,6 +594,114 @@ public class CloudAccountService {
 
     private boolean isGoogleWorkspaceMimeType(String mimeType) {
         return mimeType != null && mimeType.startsWith("application/vnd.google-apps.");
+    }
+
+    private FilePreviewResponse buildGoogleWorkspacePreview(CloudAccount account,
+                                                             FileMetadata metadata,
+                                                             FilePreviewResponse.FilePreviewResponseBuilder builder) throws Exception {
+        GoogleExportFormat exportFormat = resolveGoogleExportFormat(metadata.getMimeType());
+
+        ByteArrayOutputStream exportedStream = executeWithTokenRefresh(account,
+                token -> googleDriveService.exportFile(token, metadata.getCloudFileId(), exportFormat.mimeType()));
+
+        byte[] bytes = exportedStream.toByteArray();
+        if (bytes.length > INLINE_PREVIEW_MAX_BYTES) {
+            String externalLink = resolveExternalPreviewUrl(account, metadata);
+            return finalizePreviewResponse(metadata, builder.previewAvailable(false)
+                    .previewMode("EXTERNAL_LINK")
+                    .previewUrl(externalLink)
+                    .message("Document is too large to preview inline. Open in a new tab.")
+                    .build());
+        }
+
+        String contentType = exportFormat.mimeType();
+        return buildInlinePreviewResponse(metadata, builder, bytes, contentType);
+    }
+
+    private boolean shouldAttemptInline(FileMetadata metadata) {
+        if (metadata.getMimeType() == null) {
+            return false;
+        }
+
+        if (isGoogleWorkspaceMimeType(metadata.getMimeType())) {
+            return false;
+        }
+
+        if (metadata.getFileSize() != null && metadata.getFileSize() > INLINE_PREVIEW_MAX_BYTES) {
+            return false;
+        }
+
+        String mime = metadata.getMimeType().toLowerCase(Locale.ROOT);
+        return mime.startsWith("image/") ||
+                mime.startsWith("text/") ||
+                "application/pdf".equals(mime) ||
+                SIMPLE_TEXT_MIME_TYPES.contains(mime);
+    }
+
+    private FilePreviewResponse buildInlinePreviewResponse(FileMetadata metadata,
+                                                            FilePreviewResponse.FilePreviewResponseBuilder builder,
+                                                            byte[] fileBytes,
+                                                            String contentType) {
+        if (fileBytes == null || fileBytes.length == 0) {
+            return finalizePreviewResponse(metadata, builder.previewAvailable(false)
+                    .previewMode("UNSUPPORTED")
+                    .message("Preview is not available for this file.")
+                .build());
+        }
+
+        String effectiveContentType = contentType != null ? contentType : "application/octet-stream";
+        String inlineContent = Base64.getEncoder().encodeToString(fileBytes);
+        String previewMode = determinePreviewMode(effectiveContentType);
+
+        return finalizePreviewResponse(metadata, builder.previewAvailable(true)
+                .previewMode(previewMode)
+                .contentType(effectiveContentType)
+                .inlineContent(inlineContent)
+            .build());
+    }
+
+    private String resolveExternalPreviewUrl(CloudAccount account, FileMetadata metadata) throws Exception {
+        if (metadata.getWebViewLink() != null && !metadata.getWebViewLink().isBlank()) {
+            return metadata.getWebViewLink();
+        }
+
+        if (account.getProviderName() == CloudProvider.GOOGLE_DRIVE) {
+            if (metadata.getCloudFileId() != null && !metadata.getCloudFileId().isBlank()) {
+                return "https://drive.google.com/file/d/" + metadata.getCloudFileId() + "/preview";
+            }
+        } else if (account.getProviderName() == CloudProvider.ONEDRIVE) {
+            return metadata.getWebViewLink();
+        } else if (account.getProviderName() == CloudProvider.DROPBOX) {
+            return executeWithTokenRefresh(account,
+                    token -> dropboxService.getTemporaryLink(token, metadata.getCloudFileId()));
+        }
+
+        return null;
+    }
+
+    private String determinePreviewMode(String mimeType) {
+        if (mimeType == null) {
+            return "UNKNOWN";
+        }
+
+        String lowerMime = mimeType.toLowerCase(Locale.ROOT);
+        if (lowerMime.startsWith("image/")) {
+            return "IMAGE";
+        }
+        if ("application/pdf".equals(lowerMime)) {
+            return "PDF";
+        }
+        if (lowerMime.startsWith("text/") || SIMPLE_TEXT_MIME_TYPES.contains(lowerMime)) {
+            return "TEXT";
+        }
+
+        return "BINARY";
+    }
+
+    private FilePreviewResponse finalizePreviewResponse(FileMetadata metadata, FilePreviewResponse response) {
+        metadata.setLastAccessed(LocalDateTime.now());
+        fileMetadataRepository.save(metadata);
+        return response;
     }
 
     private GoogleExportFormat resolveGoogleExportFormat(String mimeType) {

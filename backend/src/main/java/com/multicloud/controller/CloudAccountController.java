@@ -117,6 +117,22 @@ public class CloudAccountController {
         }
     }
 
+    @GetMapping("/files/{fileId}/preview")
+    public ResponseEntity<?> previewFile(@PathVariable Long fileId) {
+        try {
+            logger.info("Generating preview for file: {}", fileId);
+            FilePreviewResponse preview = cloudAccountService.getFilePreview(fileId);
+            return ResponseEntity.ok(preview);
+        } catch (IllegalArgumentException ex) {
+            logger.warn("Preview validation failed for file {}: {}", fileId, ex.getMessage());
+            return ResponseEntity.badRequest().body(new MessageResponse(ex.getMessage()));
+        } catch (Exception e) {
+            logger.error("Preview failed for file: {}", fileId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Preview failed: " + e.getMessage()));
+        }
+    }
+
     // Delete file
     @DeleteMapping("/files/{fileId}")
     public ResponseEntity<?> deleteFile(@PathVariable Long fileId) {

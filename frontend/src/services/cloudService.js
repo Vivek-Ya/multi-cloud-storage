@@ -256,6 +256,16 @@ const cloudService = {
     }
   },
 
+  // Preview file
+  previewFile: async (fileId) => {
+    try {
+      const response = await api.get(`/cloud-accounts/files/${fileId}/preview`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
   // Search files
   searchFiles: async (query) => {
     try {

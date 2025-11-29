@@ -11,6 +11,7 @@ import RenameModal from './RenameModal';
 import CopyModal from './CopyModal';
 import { providerLogos, appLogo } from '../../assets/logos';
 import { getProviderName } from '../../utils/helpers';
+import FilePreviewModal from './FilePreviewModal';
 
 const FileManager = () => {
   const {
@@ -22,6 +23,7 @@ const FileManager = () => {
     renameFile,
     batchDeleteFiles,
     copyFile: copyFileAction,
+    previewFile: previewFileAction,
     cloudAccounts,
   } = useCloud();
   const {
@@ -34,6 +36,11 @@ const FileManager = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [renameTarget, setRenameTarget] = useState(null);
   const [copyTarget, setCopyTarget] = useState(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewTarget, setPreviewTarget] = useState(null);
+  const [previewData, setPreviewData] = useState(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState(null);
 
   const resolveErrorMessage = (error, fallback) => {
     if (!error) {
@@ -184,11 +191,41 @@ const FileManager = () => {
   };
 
   const handleView = (file) => {
-    if (file.webViewLink) {
-      window.open(file.webViewLink, '_blank', 'noopener,noreferrer');
-    } else if (!file.isFolder) {
-      handleDownload(file);
+    if (file.isFolder) {
+      showNotification('Folders cannot be previewed yet.', 'info');
+      return;
     }
+
+    setPreviewTarget(file);
+    setPreviewData(null);
+    setPreviewError(null);
+    setIsPreviewOpen(true);
+    setPreviewLoading(true);
+
+    previewFileAction(file.id)
+      .then((data) => {
+        setPreviewData(data);
+        if (!data.previewAvailable && !data.previewUrl && data.message) {
+          setPreviewError(data.message);
+        }
+      })
+      .catch((error) => {
+        console.error('Preview failed', error);
+        const message = resolveErrorMessage(error, 'Failed to load preview.');
+        setPreviewError(message);
+        showNotification(message, 'error');
+      })
+      .finally(() => {
+        setPreviewLoading(false);
+      });
+  };
+
+  const handleClosePreview = () => {
+    setIsPreviewOpen(false);
+    setPreviewTarget(null);
+    setPreviewData(null);
+    setPreviewError(null);
+    setPreviewLoading(false);
   };
 
   return (
@@ -331,6 +368,15 @@ const FileManager = () => {
             setCopyTarget(null);
           }
         }}
+      />
+      <FilePreviewModal
+        open={isPreviewOpen}
+        file={previewTarget}
+        preview={previewData}
+        loading={previewLoading}
+        error={previewError}
+        onClose={handleClosePreview}
+        onDownload={handleDownload}
       />
     </DragDropZone>
   );

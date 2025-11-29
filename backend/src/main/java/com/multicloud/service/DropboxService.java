@@ -262,6 +262,12 @@ public class DropboxService {
         return quota;
     }
 
+    public String getTemporaryLink(String accessToken, String fileId) throws DbxException {
+        DbxClientV2 client = getClient(accessToken);
+        GetTemporaryLinkResult result = client.files().getTemporaryLink(fileId);
+        return result != null ? result.getLink() : null;
+    }
+
     public String getUserEmail(String accessToken) throws DbxException {
         DbxClientV2 client = getClient(accessToken);
         FullAccount account = client.users().getCurrentAccount();

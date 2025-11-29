@@ -269,6 +269,19 @@ export const CloudProvider = ({ children }) => {
     }
   }, [selectedAccount, currentPath, fetchFiles]);
 
+  const previewFile = useCallback(async (fileId) => {
+    try {
+      setError(null);
+      const preview = await cloudService.previewFile(fileId);
+      return preview;
+    } catch (error) {
+      console.error('Error generating preview:', error);
+      const message = error?.message || error?.error || 'Failed to generate preview';
+      setError(message);
+      throw error;
+    }
+  }, []);
+
   // Create folder
   const createFolder = useCallback(async (accountId, folderName, parentFolderId = '') => {
     try {
@@ -447,6 +460,7 @@ export const CloudProvider = ({ children }) => {
     renameFile,
     moveFile,
     copyFile,
+    previewFile,
     createFolder,
     searchFiles,
     shareFile,
