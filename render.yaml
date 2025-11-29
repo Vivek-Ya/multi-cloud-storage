@@ -61,7 +61,7 @@ services:
     name: multicloud-frontend
     runtime: static
     branch: main
-    rootDirectory: frontend
+    rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: build
     envVars:
