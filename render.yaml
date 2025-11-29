@@ -4,6 +4,7 @@ services:
     env: docker
     plan: starter
     region: oregon
+    branch: main
     dockerfilePath: backend/Dockerfile
     dockerContext: backend
     autoDeploy: true
@@ -41,36 +42,31 @@ services:
       - key: GOOGLE_CLIENT_SECRET
         sync: false
       - key: GOOGLE_REDIRECT_URI
-        value: https://<your-backend-domain>/oauth2/callback/google
         sync: false
       - key: ONEDRIVE_CLIENT_ID
         sync: false
       - key: ONEDRIVE_CLIENT_SECRET
         sync: false
       - key: ONEDRIVE_REDIRECT_URI
-        value: https://<your-backend-domain>/oauth2/callback/onedrive
         sync: false
       - key: DROPBOX_CLIENT_ID
         sync: false
       - key: DROPBOX_CLIENT_SECRET
         sync: false
       - key: DROPBOX_REDIRECT_URI
-        value: https://<your-backend-domain>/oauth2/callback/dropbox
         sync: false
       - key: JAVA_OPTS
         value: "-Xms512m -Xmx512m"
-  - type: static
+  - type: static_site
     name: multicloud-frontend
     plan: starter
+    branch: main
+    rootDirectory: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: build
     envVars:
       - key: REACT_APP_API_BASE_URL
-        value: https://<your-backend-domain>/api
         sync: false
-    buildFilter:
-      paths:
-        - frontend/**
 databases:
   - name: multicloud-db
     plan: starter
