@@ -18,7 +18,7 @@ const FolderDialogTransition = React.forwardRef(function FolderDialogTransition(
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const FolderCreate = () => {
+const FolderCreate = ({ renderTrigger }) => {
   const [open, setOpen] = useState(false);
   const [folderName, setFolderName] = useState('');
   const { selectedAccount, createFolder } = useCloud();
@@ -63,14 +63,21 @@ const FolderCreate = () => {
     }
   };
 
-  return (
-    <>
+  const trigger = renderTrigger
+    ? renderTrigger({ onOpen: handleOpen, isDisabled: !selectedAccount })
+    : (
       <button
         className="btn-create-folder"
         onClick={handleOpen}
+        type="button"
       >
         📁 New Folder
       </button>
+    );
+
+  return (
+    <>
+      {trigger}
 
       <Dialog
         open={open}

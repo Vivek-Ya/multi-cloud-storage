@@ -3,7 +3,7 @@ import { useCloud } from '../../context/CloudContext';
 import { useNotifications } from '../../context/NotificationContext';
 import './FileUpload.css';
 
-const FileUpload = () => {
+const FileUpload = ({ renderTrigger }) => {
   const { selectedAccount, uploadFile, uploadProgress } = useCloud();
   const { showNotification, showProgress, updateProgress, completeProgress } = useNotifications();
   const [uploading, setUploading] = useState(false);
@@ -66,6 +66,23 @@ const FileUpload = () => {
     }
   }, [activeUpload, uploadProgress, updateProgress]);
 
+  const trigger = renderTrigger
+    ? renderTrigger({
+        onSelect: handleFileSelect,
+        isDisabled: uploading,
+        isUploading: uploading,
+      })
+    : (
+      <button
+        type="button"
+        className="btn-upload"
+        onClick={handleFileSelect}
+        disabled={uploading}
+      >
+        {uploading ? 'Uploading...' : '+ Upload File'}
+      </button>
+    );
+
   return (
     <div className="file-upload">
       <input
@@ -74,13 +91,7 @@ const FileUpload = () => {
         onChange={handleFileChange}
         style={{ display: 'none' }}
       />
-      <button
-        className="btn-upload"
-        onClick={handleFileSelect}
-        disabled={uploading}
-      >
-        {uploading ? 'Uploading...' : '+ Upload File'}
-      </button>
+      {trigger}
     </div>
   );
 };

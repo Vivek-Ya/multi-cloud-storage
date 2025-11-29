@@ -117,31 +117,29 @@ const Dashboard = () => {
   return (
     <div className="dashboard">
       <nav className="dashboard-nav">
-        <div className="nav-left">
-          <button
-            type="button"
-            className={`btn-sidebar-toggle ${isSidebarOpen ? 'active' : ''}`}
-            onClick={handleToggleSidebar}
-            aria-expanded={isSidebarOpen}
-            aria-controls="dashboard-sidebar"
-            aria-label="Toggle sidebar"
-          >
-            <span className="btn-sidebar-toggle__icon" aria-hidden="true">
-              <span />
-              <span />
-              <span />
-            </span>
-          </button>
-          <div className="dashboard-brand">
-            <img src={appLogo} alt="Multi-Cloud Storage logo" className="dashboard-brand__logo" />
-            <div className="dashboard-brand__text">
-              <h1>Multi-Cloud Storage</h1>
-              <span className="dashboard-brand__subtitle">Unified workspace for your files</span>
-            </div>
+        <button
+          type="button"
+          className={`btn-sidebar-toggle ${isSidebarOpen ? 'active' : ''}`}
+          onClick={handleToggleSidebar}
+          aria-expanded={isSidebarOpen}
+          aria-controls="dashboard-sidebar"
+          aria-label="Toggle sidebar"
+        >
+          <span className="btn-sidebar-toggle__icon" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </span>
+        </button>
+        <div className="dashboard-brand">
+          <img src={appLogo} alt="Multi-Cloud Storage logo" className="dashboard-brand__logo" />
+          <div className="dashboard-brand__text">
+            <h1>Multi-Cloud Storage</h1>
+            <span className="dashboard-brand__subtitle">Unified workspace for your files</span>
           </div>
         </div>
         <div className="user-info">
-          <span>Welcome, {user?.username}!</span>
+          <span className="user-info__welcome">Welcome, {user?.username}!</span>
           <button
             type="button"
             onClick={toggleNightMode}

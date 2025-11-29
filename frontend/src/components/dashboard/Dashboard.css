@@ -14,24 +14,17 @@ body.sidebar-open {
 
 .dashboard-nav {
   background: var(--surface-1);
-  padding: 20px 40px;
+  padding: 18px 32px;
   box-shadow: 0 24px 45px var(--shadow-color);
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 20px;
   position: sticky;
   top: 0;
   z-index: 100;
   backdrop-filter: blur(18px);
   border-bottom: 1px solid var(--border-color);
   transition: background 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
-}
-
-.nav-left {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  flex: 1;
 }
 
 .dashboard-brand {
@@ -70,17 +63,25 @@ body.sidebar-open {
 .user-info {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   margin-left: auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.user-info__welcome {
+  color: var(--text-secondary);
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .btn-sidebar-toggle {
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   border: 1px solid var(--border-color);
   background: var(--surface-1);
   color: var(--text-primary);
@@ -102,8 +103,8 @@ body.sidebar-open {
   flex-direction: column;
   justify-content: center;
   align-items: stretch;
-  gap: 6px;
-  width: 22px;
+  gap: 5px;
+  width: 20px;
 }
 
 .btn-sidebar-toggle__icon span {
@@ -126,13 +127,8 @@ body.sidebar-open {
   transform: translateY(-8px) rotate(-45deg);
 }
 
-.user-info span {
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
 .btn-night-toggle {
-  padding: 8px 18px;
+  padding: 6px 14px;
   border-radius: 999px;
   border: 1px solid var(--button-secondary-border);
   background: var(--button-secondary-bg);
@@ -162,7 +158,7 @@ body.sidebar-open {
 }
 
 .btn-logout {
-  padding: 8px 18px;
+  padding: 6px 14px;
   background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
   color: white;
   border: none;
@@ -454,15 +450,9 @@ body.night-mode .empty-state__illustration {
     gap: 12px;
   }
 
-  .nav-left {
-    flex: 0 0 auto;
-    gap: 16px;
-  }
-
   .user-info {
-    flex: 1;
+    width: 100%;
     justify-content: flex-end;
-    flex-wrap: wrap;
     gap: 10px;
   }
 
@@ -504,12 +494,7 @@ body.night-mode .empty-state__illustration {
 
 @media (max-width: 768px) {
   .dashboard-nav {
-    padding: 16px 20px;
-  }
-
-  .nav-left {
-    width: 100%;
-    justify-content: space-between;
+    padding: 14px 18px;
   }
 
   .dashboard-brand {
@@ -531,20 +516,13 @@ body.night-mode .empty-state__illustration {
 
   .user-info {
     width: 100%;
-    justify-content: flex-end;
-    align-items: flex-end;
+    justify-content: space-between;
+    align-items: center;
     gap: 8px;
   }
 
-  .user-info span {
-    width: 100%;
-    text-align: right;
+  .user-info__welcome {
     font-size: 0.9rem;
-  }
-
-  .btn-night-toggle,
-  .btn-logout {
-    width: auto;
   }
 
   .connect-buttons {

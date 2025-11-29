@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useCloud } from '../../context/CloudContext';
 import FileList from './FileList';
 import FileUpload from './FileUpload';
@@ -41,6 +41,8 @@ const FileManager = () => {
   const [previewData, setPreviewData] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState(null);
+  const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
+  const actionMenuRef = useRef(null);
 
   const resolveErrorMessage = (error, fallback) => {
     if (!error) {
@@ -66,6 +68,29 @@ const FileManager = () => {
     return fallback;
   };
 
+  useEffect(() => {
+    if (!isActionMenuOpen) {
+      return;
+    }
+
+    const handleClickOutside = (event) => {
+      if (!actionMenuRef.current) {
+        return;
+      }
+
+      if (!actionMenuRef.current.contains(event.target)) {
+        setIsActionMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isActionMenuOpen]);
+
+  useEffect(() => {
+    setIsActionMenuOpen(false);
+  }, [selectedAccount?.id]);
+
   if (!selectedAccount) {
     return (
       <div className="file-manager">
@@ -73,6 +98,31 @@ const FileManager = () => {
       </div>
     );
   }
+
+  const GridIcon = () => (
+    <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true" focusable="false">
+      <rect x="3" y="3" width="6" height="6" rx="1.4" />
+      <rect x="11" y="3" width="6" height="6" rx="1.4" />
+      <rect x="3" y="11" width="6" height="6" rx="1.4" />
+      <rect x="11" y="11" width="6" height="6" rx="1.4" />
+    </svg>
+  );
+
+  const ListIcon = () => (
+    <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true" focusable="false">
+      <rect x="3" y="4" width="14" height="2" rx="1" />
+      <rect x="3" y="9" width="14" height="2" rx="1" />
+      <rect x="3" y="14" width="14" height="2" rx="1" />
+    </svg>
+  );
+
+  const toggleActionMenu = () => {
+    setIsActionMenuOpen((prev) => !prev);
+  };
+
+  const closeActionMenu = () => {
+    setIsActionMenuOpen(false);
+  };
 
   const providerDisplayName = getProviderName(selectedAccount.providerName);
   const providerLogo = providerLogos[selectedAccount.providerName] ?? appLogo;
@@ -231,8 +281,8 @@ const FileManager = () => {
   return (
     <DragDropZone>
       <div className="file-manager">
-        <div className="file-manager-header">
-          <div className="header-left">
+        <div className="file-manager-toolbar">
+          <div className="toolbar-heading">
             <h2 className="file-manager-title">
               <img
                 src={providerLogo}
@@ -250,28 +300,87 @@ const FileManager = () => {
             )}
           </div>
 
-          <div className="header-actions">
-            <FileSearch />
+          <div className="toolbar-controls">
+            <div className="toolbar-search">
+              <FileSearch />
+            </div>
 
-            <div className="view-toggle">
+            <div className="view-toggle" role="group" aria-label="Change file view">
               <button
+                type="button"
                 className={view === 'grid' ? 'active' : ''}
                 onClick={() => setView('grid')}
+                aria-pressed={view === 'grid'}
                 title="Grid view"
               >
-                ⊞
+                <GridIcon />
               </button>
               <button
+                type="button"
                 className={view === 'list' ? 'active' : ''}
                 onClick={() => setView('list')}
+                aria-pressed={view === 'list'}
                 title="List view"
               >
-                ☰
+                <ListIcon />
               </button>
             </div>
 
-            <FolderCreate />
-            <FileUpload />
+            <div
+              className={`file-actions-fab ${isActionMenuOpen ? 'open' : ''}`}
+              ref={actionMenuRef}
+            >
+              <button
+                type="button"
+                className="file-actions-fab__trigger"
+                onClick={toggleActionMenu}
+                aria-haspopup="true"
+                aria-expanded={isActionMenuOpen}
+                title="Create or upload"
+              >
+                <span className="fab-icon" aria-hidden="true">+</span>
+                <span className="fab-label">New</span>
+              </button>
+
+              <div className="file-actions-fab__menu" role="menu">
+                <FolderCreate
+                  renderTrigger={({ onOpen }) => (
+                    <button
+                      type="button"
+                      className="fab-menu-item"
+                      onClick={() => {
+                        onOpen();
+                        closeActionMenu();
+                      }}
+                      role="menuitem"
+                    >
+                      <span className="fab-menu-item__icon" aria-hidden="true">📁</span>
+                      <span>New Folder</span>
+                    </button>
+                  )}
+                />
+                <FileUpload
+                  renderTrigger={({ onSelect, isDisabled, isUploading }) => (
+                    <button
+                      type="button"
+                      className="fab-menu-item"
+                      onClick={() => {
+                        if (isDisabled) {
+                          return;
+                        }
+                        onSelect();
+                        closeActionMenu();
+                      }}
+                      disabled={isDisabled}
+                      role="menuitem"
+                    >
+                      <span className="fab-menu-item__icon" aria-hidden="true">⬆️</span>
+                      <span>{isUploading ? 'Uploading…' : 'Upload File'}</span>
+                    </button>
+                  )}
+                />
+              </div>
+            </div>
           </div>
         </div>
 

@@ -1,13 +1,14 @@
 .file-search {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   background: var(--surface-1);
-  padding: 8px 18px;
+  padding: 10px 20px;
   border-radius: 28px;
   border: 1px solid var(--border-color);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: 0 12px 24px var(--shadow-color);
+  box-shadow: 0 14px 32px var(--shadow-color);
+  width: 100%;
 }
 
 .file-search:focus-within {
@@ -19,9 +20,9 @@
   flex: 1;
   border: none;
   outline: none;
-  font-size: 14px;
-  padding: 5px;
-  min-width: 200px;
+  font-size: 15px;
+  padding: 6px 0;
+  min-width: 0;
   background: transparent;
   color: var(--text-primary);
 }
@@ -49,4 +50,14 @@
 
 .clear-btn:hover {
   color: #f87171;
+}
+
+@media (max-width: 768px) {
+  .file-search {
+    padding: 8px 16px;
+  }
+
+  .search-input {
+    font-size: 14px;
+  }
 }
