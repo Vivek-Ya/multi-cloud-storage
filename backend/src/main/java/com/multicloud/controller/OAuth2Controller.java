@@ -29,6 +29,10 @@ import java.util.Map;
 public class OAuth2Controller {
 
     private static final Logger logger = LoggerFactory.getLogger(OAuth2Controller.class);
+    private static final String SESSION_USERNAME = "oauth_username";
+    private static final String SESSION_PROVIDER = "oauth_provider";
+    private static final String SESSION_STATE = "oauth_state";
+    private static final String SESSION_REDIRECT_BASE = "oauth_redirect_base";
 
     @Autowired
     private GoogleDriveService googleDriveService;
@@ -55,20 +59,26 @@ public class OAuth2Controller {
     
     @GetMapping("/authorize/google")
     public void authorizeGoogle(
-            HttpServletResponse response, 
+            HttpServletResponse response,
             HttpSession session,
-            @RequestParam(required = false) String username) {
+            @RequestParam(required = false) String username,
+            @RequestHeader(value = "Origin", required = false) String origin) {
         try {
             logger.info("Starting Google OAuth authorization for user: {}", username);
             
             if (username != null) {
-                session.setAttribute("oauth_username", username);
-                session.setAttribute("oauth_provider", "GOOGLE_DRIVE");
+                session.setAttribute(SESSION_USERNAME, username);
+                session.setAttribute(SESSION_PROVIDER, "GOOGLE_DRIVE");
                 logger.info("Stored username and provider in session");
             }
             
             String state = UUID.randomUUID().toString();
-            session.setAttribute("oauth_state", state);
+            session.setAttribute(SESSION_STATE, state);
+
+            if (origin != null && !origin.isBlank()) {
+                session.setAttribute(SESSION_REDIRECT_BASE, origin);
+                logger.info("Captured redirect base from Origin header: {}", origin);
+            }
 
             String authUrl = googleDriveService.getAuthorizationUrl(state);
             logger.info("Redirecting to Google OAuth URL with state={}", state);
@@ -89,10 +99,11 @@ public class OAuth2Controller {
             logger.info("Received Google OAuth callback");
 
             // Validate state to prevent CSRF
-            String sessionState = (String) session.getAttribute("oauth_state");
+            String sessionState = (String) session.getAttribute(SESSION_STATE);
+            String redirectBase = resolveRedirectBase(session);
             if (state == null || sessionState == null || !sessionState.equals(state)) {
                 logger.warn("Invalid or missing OAuth state (google). session={}, request={}", sessionState, state);
-                return new RedirectView(frontendBaseUrl + "/dashboard?error=state_mismatch");
+                return new RedirectView(redirectBase + "/dashboard?error=state_mismatch");
             }
             
             // Exchange code for tokens
@@ -106,10 +117,10 @@ public class OAuth2Controller {
             String userEmail = googleDriveService.getUserEmail(accessToken);
 
             // Get username from session
-            String username = (String) session.getAttribute("oauth_username");
+            String username = (String) session.getAttribute(SESSION_USERNAME);
             if (username == null) {
                 logger.warn("No username in session, redirecting to login");
-                return new RedirectView(frontendBaseUrl + "/login?message=session_expired");
+                return new RedirectView(redirectBase + "/login?message=session_expired");
             }
 
             // Find user
@@ -128,15 +139,14 @@ public class OAuth2Controller {
             logger.info("Successfully saved Google Drive account for user: {}", username);
 
             // Clear session
-            session.removeAttribute("oauth_username");
-            session.removeAttribute("oauth_provider");
-            session.removeAttribute("oauth_state");
+            clearSession(session);
 
-            return new RedirectView(frontendBaseUrl + "/dashboard?connected=google");
+            return new RedirectView(redirectBase + "/dashboard?connected=google");
             
         } catch (Exception e) {
             logger.error("Error in Google OAuth callback", e);
-            return new RedirectView(frontendBaseUrl + "/dashboard?error=" + e.getMessage());
+            String redirectBase = resolveRedirectBase(session);
+            return new RedirectView(redirectBase + "/dashboard?error=" + e.getMessage());
         }
     }
 
@@ -144,19 +154,25 @@ public class OAuth2Controller {
     
     @GetMapping("/authorize/onedrive")
     public void authorizeOneDrive(
-            HttpServletResponse response, 
+            HttpServletResponse response,
             HttpSession session,
-            @RequestParam(required = false) String username) {
+            @RequestParam(required = false) String username,
+            @RequestHeader(value = "Origin", required = false) String origin) {
         try {
             logger.info("Starting OneDrive OAuth authorization for user: {}", username);
             
             if (username != null) {
-                session.setAttribute("oauth_username", username);
-                session.setAttribute("oauth_provider", "ONEDRIVE");
+                session.setAttribute(SESSION_USERNAME, username);
+                session.setAttribute(SESSION_PROVIDER, "ONEDRIVE");
             }
             
             String state = UUID.randomUUID().toString();
-            session.setAttribute("oauth_state", state);
+            session.setAttribute(SESSION_STATE, state);
+
+            if (origin != null && !origin.isBlank()) {
+                session.setAttribute(SESSION_REDIRECT_BASE, origin);
+                logger.info("Captured redirect base from Origin header: {}", origin);
+            }
 
             String authUrl = oneDriveService.getAuthorizationUrl();
             // append state param
@@ -179,10 +195,11 @@ public class OAuth2Controller {
             logger.info("Received OneDrive OAuth callback");
 
             // Validate state to prevent CSRF
-            String sessionState = (String) session.getAttribute("oauth_state");
+            String sessionState = (String) session.getAttribute(SESSION_STATE);
+            String redirectBase = resolveRedirectBase(session);
             if (state == null || sessionState == null || !sessionState.equals(state)) {
                 logger.warn("Invalid or missing OAuth state (onedrive). session={}, request={}", sessionState, state);
-                return new RedirectView(frontendBaseUrl + "/dashboard?error=state_mismatch");
+                return new RedirectView(redirectBase + "/dashboard?error=state_mismatch");
             }
             
             Map<String, String> tokens = oneDriveService.exchangeCode(code);
@@ -194,10 +211,10 @@ public class OAuth2Controller {
             // Get user email from OneDrive
             String userEmail = oneDriveService.getUserEmail(accessToken);
 
-            String username = (String) session.getAttribute("oauth_username");
+            String username = (String) session.getAttribute(SESSION_USERNAME);
             if (username == null) {
                 logger.warn("No username in session");
-                return new RedirectView(frontendBaseUrl + "/login?message=session_expired");
+                return new RedirectView(redirectBase + "/login?message=session_expired");
             }
 
             User user = userRepository.findByUsername(username)
@@ -213,15 +230,14 @@ public class OAuth2Controller {
 
             logger.info("Successfully saved OneDrive account for user: {}", username);
 
-            session.removeAttribute("oauth_username");
-            session.removeAttribute("oauth_provider");
-            session.removeAttribute("oauth_state");
+            clearSession(session);
 
-            return new RedirectView(frontendBaseUrl + "/dashboard?connected=onedrive");
+            return new RedirectView(redirectBase + "/dashboard?connected=onedrive");
             
         } catch (Exception e) {
             logger.error("Error in OneDrive OAuth callback", e);
-            return new RedirectView(frontendBaseUrl + "/dashboard?error=" + e.getMessage());
+            String redirectBase = resolveRedirectBase(session);
+            return new RedirectView(redirectBase + "/dashboard?error=" + e.getMessage());
         }
     }
 
@@ -229,19 +245,25 @@ public class OAuth2Controller {
     
     @GetMapping("/authorize/dropbox")
     public void authorizeDropbox(
-            HttpServletResponse response, 
+            HttpServletResponse response,
             HttpSession session,
-            @RequestParam(required = false) String username) {
+            @RequestParam(required = false) String username,
+            @RequestHeader(value = "Origin", required = false) String origin) {
         try {
             logger.info("Starting Dropbox OAuth authorization for user: {}", username);
             
             if (username != null) {
-                session.setAttribute("oauth_username", username);
-                session.setAttribute("oauth_provider", "DROPBOX");
+                session.setAttribute(SESSION_USERNAME, username);
+                session.setAttribute(SESSION_PROVIDER, "DROPBOX");
             }
             
             String state = UUID.randomUUID().toString();
-            session.setAttribute("oauth_state", state);
+            session.setAttribute(SESSION_STATE, state);
+
+            if (origin != null && !origin.isBlank()) {
+                session.setAttribute(SESSION_REDIRECT_BASE, origin);
+                logger.info("Captured redirect base from Origin header: {}", origin);
+            }
 
             String authUrl = dropboxService.getAuthorizationUrl();
             authUrl = authUrl + "&state=" + URLEncoder.encode(state, StandardCharsets.UTF_8.name());
@@ -263,10 +285,11 @@ public class OAuth2Controller {
             logger.info("Received Dropbox OAuth callback");
 
             // Validate state to prevent CSRF
-            String sessionState = (String) session.getAttribute("oauth_state");
+            String sessionState = (String) session.getAttribute(SESSION_STATE);
+            String redirectBase = resolveRedirectBase(session);
             if (state == null || sessionState == null || !sessionState.equals(state)) {
                 logger.warn("Invalid or missing OAuth state (dropbox). session={}, request={}", sessionState, state);
-                return new RedirectView(frontendBaseUrl + "/dashboard?error=state_mismatch");
+                return new RedirectView(redirectBase + "/dashboard?error=state_mismatch");
             }
             
             Map<String, String> tokens = dropboxService.exchangeCode(code);
@@ -277,10 +300,10 @@ public class OAuth2Controller {
 
             String userEmail = dropboxService.getUserEmail(accessToken);
 
-            String username = (String) session.getAttribute("oauth_username");
+            String username = (String) session.getAttribute(SESSION_USERNAME);
             if (username == null) {
                 logger.warn("No username in session");
-                return new RedirectView(frontendBaseUrl + "/login?message=session_expired");
+                return new RedirectView(redirectBase + "/login?message=session_expired");
             }
 
             User user = userRepository.findByUsername(username)
@@ -296,15 +319,14 @@ public class OAuth2Controller {
 
             logger.info("Successfully saved Dropbox account for user: {}", username);
 
-            session.removeAttribute("oauth_username");
-            session.removeAttribute("oauth_provider");
-            session.removeAttribute("oauth_state");
+            clearSession(session);
 
-            return new RedirectView(frontendBaseUrl + "/dashboard?connected=dropbox");
+            return new RedirectView(redirectBase + "/dashboard?connected=dropbox");
             
         } catch (Exception e) {
             logger.error("Error in Dropbox OAuth callback", e);
-            return new RedirectView(frontendBaseUrl + "/dashboard?error=" + e.getMessage());
+            String redirectBase = resolveRedirectBase(session);
+            return new RedirectView(redirectBase + "/dashboard?error=" + e.getMessage());
         }
     }
 
@@ -316,5 +338,22 @@ public class OAuth2Controller {
         } catch (IOException e) {
             logger.error("Failed to redirect to error page", e);
         }
+    }
+
+    private String resolveRedirectBase(HttpSession session) {
+        Object baseFromSession = session.getAttribute(SESSION_REDIRECT_BASE);
+        String resolved = frontendBaseUrl;
+        if (baseFromSession instanceof String base && !base.isBlank()) {
+            resolved = base;
+        }
+        logger.info("Using frontend redirect base: {}", resolved);
+        return resolved;
+    }
+
+    private void clearSession(HttpSession session) {
+        session.removeAttribute(SESSION_USERNAME);
+        session.removeAttribute(SESSION_PROVIDER);
+        session.removeAttribute(SESSION_STATE);
+        session.removeAttribute(SESSION_REDIRECT_BASE);
     }
 }
