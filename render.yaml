@@ -1,0 +1,77 @@
+services:
+  - type: web
+    name: multicloud-backend
+    env: docker
+    plan: starter
+    region: oregon
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    autoDeploy: true
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: multicloud-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: multicloud-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: multicloud-db
+          property: name
+      - key: DB_USERNAME
+        fromDatabase:
+          name: multicloud-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: multicloud-db
+          property: password
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRATION
+        value: "86400000"
+      - key: JWT_REFRESH_EXPIRATION
+        value: "604800000"
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URI
+        value: https://<your-backend-domain>/oauth2/callback/google
+        sync: false
+      - key: ONEDRIVE_CLIENT_ID
+        sync: false
+      - key: ONEDRIVE_CLIENT_SECRET
+        sync: false
+      - key: ONEDRIVE_REDIRECT_URI
+        value: https://<your-backend-domain>/oauth2/callback/onedrive
+        sync: false
+      - key: DROPBOX_CLIENT_ID
+        sync: false
+      - key: DROPBOX_CLIENT_SECRET
+        sync: false
+      - key: DROPBOX_REDIRECT_URI
+        value: https://<your-backend-domain>/oauth2/callback/dropbox
+        sync: false
+      - key: JAVA_OPTS
+        value: "-Xms512m -Xmx512m"
+  - type: static
+    name: multicloud-frontend
+    plan: starter
+    buildCommand: npm install && npm run build
+    staticPublishPath: build
+    envVars:
+      - key: REACT_APP_API_BASE_URL
+        value: https://<your-backend-domain>/api
+        sync: false
+    buildFilter:
+      paths:
+        - frontend/**
+databases:
+  - name: multicloud-db
+    plan: starter
+    databaseName: multicloud_storage

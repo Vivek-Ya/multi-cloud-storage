@@ -170,13 +170,25 @@ Add integration or end-to-end coverage as needed; testing defaults use JUnit 5 o
 
 ## Deployment
 
-1. Build the backend: `cd backend && ./mvnw -DskipTests package`
-2. Build the frontend: `cd frontend && npm run build`
-3. Serve the frontend bundle through Nginx, CloudFront, or your preferred static hosting.
-4. Deploy the backend jar to a JVM host (Spring Boot supports Docker, Heroku, AWS Elastic Beanstalk, etc.).
-5. Provision MySQL with automated backups and configure environment variables in your runtime environment.
-6. Update OAuth redirect URIs to your production domain and rotate credentials as part of the release checklist.
+### Backend (Render + GHCR)
 
+1. Enable the `Backend Docker Image` workflow (`.github/workflows/backend-docker.yml`) to publish `ghcr.io/<github-org-or-user>/multi-cloud-backend:latest` on every push to `main`.
+2. Create a new Web Service in Render by importing `render.yaml`. Select the `multicloud-backend` service; Render will build directly from `backend/Dockerfile`.
+3. Connect the generated Render _Standard MySQL_ database (`multicloud-db`). The blueprint wires `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, and `DB_PASSWORD` automatically.
+4. Populate the remaining secrets (`JWT_SECRET`, OAuth client details, `CORS_ALLOWED_ORIGINS`, etc.) in the Render dashboard.
+5. After the first deployment completes, run smoke tests against a simple authenticated flow (e.g., `POST /api/auth/login`) and confirm the dashboard renders via the hosted frontend.
+
+### Frontend (Render Static Site)
+
+1. The `render.yaml` blueprint provisions the `multicloud-frontend` static site. Import the blueprint or create the service manually with `npm install && npm run build` and publish `frontend/build`.
+2. Set `REACT_APP_API_BASE_URL` to the HTTPS URL of the deployed backend (e.g., `https://multicloud-backend.onrender.com/api`).
+3. Rebuild the static site whenever backend endpoints change; Render can auto-deploy on push with the included build filter.
+
+### Common Checklist
+
+- Update OAuth redirect URIs to match the Render hostname of the backend.
+- Rotate secrets regularly and keep database backups enabled.
+- Configure custom domains and HTTPS in Render before go-live.
 ---
 
 ## Troubleshooting

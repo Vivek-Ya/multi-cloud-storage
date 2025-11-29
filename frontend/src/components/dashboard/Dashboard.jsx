@@ -223,6 +223,10 @@ const Dashboard = () => {
           )}
         </main>
       </div>
+
+      <footer className="dashboard-footer">
+        <p>© {new Date().getFullYear()} Crafted by Vivek Yadav</p>
+      </footer>
     </div>
   );
 };

@@ -1,6 +1,8 @@
 
 .dashboard {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   background: var(--bg-gradient);
   color: var(--text-primary);
   transition: background 0.5s ease, color 0.3s ease;
@@ -123,8 +125,8 @@
 }
 
 .dashboard-container {
+  flex: 1;
   display: flex;
-  min-height: calc(100vh - 70px);
 }
 
 .sidebar {
@@ -318,4 +320,20 @@ body.night-mode .empty-state__illustration {
   height: 22px;
   object-fit: contain;
   filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.18));
+}
+
+.dashboard-footer {
+  margin-top: auto;
+  padding: 18px 40px;
+  text-align: center;
+  background: var(--surface-1);
+  border-top: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dashboard-footer p {
+  margin: 0;
 }
