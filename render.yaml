@@ -57,9 +57,9 @@ services:
         sync: false
       - key: JAVA_OPTS
         value: "-Xms512m -Xmx512m"
-  - type: static_site
+  - type: web
     name: multicloud-frontend
-    plan: starter
+    runtime: static
     branch: main
     rootDirectory: frontend
     buildCommand: npm install && npm run build
