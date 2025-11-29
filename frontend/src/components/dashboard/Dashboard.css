@@ -8,6 +8,10 @@
   transition: background 0.5s ease, color 0.3s ease;
 }
 
+body.sidebar-open {
+  overflow: hidden;
+}
+
 .dashboard-nav {
   background: var(--surface-1);
   padding: 20px 40px;
@@ -60,6 +64,26 @@
   display: flex;
   align-items: center;
   gap: 14px;
+}
+
+.btn-sidebar-toggle {
+  display: none;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.3px;
+}
+
+.btn-sidebar-toggle:hover,
+.btn-sidebar-toggle.active {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  box-shadow: 0 14px 30px var(--shadow-color);
 }
 
 .user-info span {
@@ -137,7 +161,24 @@
   overflow-y: auto;
   backdrop-filter: blur(18px);
   box-shadow: 14px 0 35px -24px var(--shadow-color);
-  transition: background 0.4s ease, border-color 0.4s ease;
+  transition: background 0.4s ease, border-color 0.4s ease, transform 0.3s ease;
+}
+
+.btn-close-sidebar {
+  display: none;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  font-size: 28px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.btn-close-sidebar:hover {
+  color: var(--text-primary);
 }
 
 .sidebar-section h3 {
@@ -336,4 +377,177 @@ body.night-mode .empty-state__illustration {
 
 .dashboard-footer p {
   margin: 0;
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 90;
+}
+
+.sidebar-backdrop.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+@media (max-width: 1200px) {
+  .dashboard-nav {
+    padding: 18px 28px;
+  }
+
+  .dashboard-brand__text h1 {
+    font-size: 1.2rem;
+  }
+
+  .main-content {
+    padding: 22px;
+  }
+}
+
+@media (max-width: 992px) {
+  .dashboard-nav {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .btn-sidebar-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .user-info {
+    width: 100%;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dashboard-container {
+    position: relative;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(320px, 80vw);
+    max-width: 360px;
+    padding: 80px 20px 32px;
+    transform: translateX(-110%);
+    border-right: none;
+    border-radius: 0 18px 18px 0;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
+    z-index: 120;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .btn-close-sidebar {
+    display: inline-block;
+  }
+
+  .dashboard-container {
+    flex-direction: column;
+  }
+
+  .main-content {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-nav {
+    padding: 16px 20px;
+  }
+
+  .dashboard-brand {
+    gap: 12px;
+  }
+
+  .dashboard-brand__logo {
+    width: 46px;
+    height: 46px;
+  }
+
+  .dashboard-brand__text h1 {
+    font-size: 1.05rem;
+  }
+
+  .dashboard-brand__subtitle {
+    letter-spacing: 0.18em;
+  }
+
+  .user-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .user-info span {
+    font-size: 0.9rem;
+  }
+
+  .btn-night-toggle,
+  .btn-logout {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .connect-buttons {
+    gap: 10px;
+  }
+
+  .btn-connect-cloud,
+  .btn-with-icon {
+    font-size: 0.95rem;
+  }
+
+  .empty-state {
+    padding: 60px 16px;
+  }
+
+  .empty-state-buttons {
+    gap: 10px;
+  }
+
+  .dashboard-footer {
+    padding: 16px 20px;
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .dashboard-brand__text h1 {
+    font-size: 0.95rem;
+  }
+
+  .dashboard-brand__subtitle {
+    display: none;
+  }
+
+  .btn-night-toggle,
+  .btn-logout {
+    padding: 10px 16px;
+  }
+
+  .btn-connect-cloud,
+  .btn-with-icon {
+    padding: 10px 14px;
+  }
+
+  .main-content {
+    padding: 18px 16px 24px;
+  }
+
+  .empty-state__illustration {
+    width: clamp(120px, 36vw, 180px);
+  }
 }

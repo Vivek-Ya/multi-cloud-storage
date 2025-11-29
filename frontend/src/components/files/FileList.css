@@ -166,3 +166,47 @@ tbody td input[type="checkbox"] {
   width: 18px;
   height: 18px;
 }
+
+@media (max-width: 1024px) {
+  .file-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .empty-files {
+    padding: 40px 20px;
+  }
+
+  .file-grid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 16px;
+  }
+
+  .file-card {
+    padding: 16px;
+  }
+
+  .file-list-table {
+    overflow-x: auto;
+  }
+
+  .file-list-table table {
+    min-width: 640px;
+  }
+}
+
+@media (max-width: 480px) {
+  .file-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 14px;
+  }
+
+  .file-icon {
+    font-size: 40px;
+  }
+
+  .file-action-button {
+    padding: 6px 10px;
+  }
+}

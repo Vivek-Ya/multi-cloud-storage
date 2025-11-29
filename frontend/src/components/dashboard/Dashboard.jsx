@@ -28,6 +28,7 @@ const Dashboard = () => {
 
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     fetchCloudAccounts();
@@ -42,6 +43,18 @@ const Dashboard = () => {
       localStorage.setItem('night-mode', JSON.stringify(isNightMode));
     }
   }, [isNightMode]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') {
+      return undefined;
+    }
+
+    document.body.classList.toggle('sidebar-open', isSidebarOpen);
+
+    return () => {
+      document.body.classList.remove('sidebar-open');
+    };
+  }, [isSidebarOpen]);
 
   useEffect(() => {
     // Check if returning from OAuth
@@ -81,17 +94,24 @@ const Dashboard = () => {
 
   const handleConnectGoogle = () => {
     showNotification('Redirecting to Google Drive authorization...', 'info');
+    setIsSidebarOpen(false);
     connectGoogleDrive();
   };
 
   const handleConnectOneDrive = () => {
     showNotification('Redirecting to OneDrive authorization...', 'info');
+    setIsSidebarOpen(false);
     connectOneDrive();
   };
 
   const handleConnectDropbox = () => {
     showNotification('Redirecting to Dropbox authorization...', 'info');
+    setIsSidebarOpen(false);
     connectDropbox();
+  };
+
+  const handleToggleSidebar = () => {
+    setIsSidebarOpen((prev) => !prev);
   };
 
   return (
@@ -104,6 +124,15 @@ const Dashboard = () => {
             <span className="dashboard-brand__subtitle">Unified workspace for your files</span>
           </div>
         </div>
+        <button
+          type="button"
+          className={`btn-sidebar-toggle ${isSidebarOpen ? 'active' : ''}`}
+          onClick={handleToggleSidebar}
+          aria-expanded={isSidebarOpen}
+          aria-controls="dashboard-sidebar"
+        >
+          {isSidebarOpen ? 'Close Menu' : 'Open Menu'}
+        </button>
         <div className="user-info">
           <span>Welcome, {user?.username}!</span>
           <button
@@ -129,8 +158,22 @@ const Dashboard = () => {
         </div>
       )}
 
+      <div
+        className={`sidebar-backdrop ${isSidebarOpen ? 'visible' : ''}`}
+        onClick={() => setIsSidebarOpen(false)}
+        aria-hidden="true"
+      />
+
       <div className="dashboard-container">
-        <aside className="sidebar">
+        <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`} id="dashboard-sidebar">
+          <button
+            type="button"
+            className="btn-close-sidebar"
+            onClick={() => setIsSidebarOpen(false)}
+            aria-label="Close sidebar"
+          >
+            X
+          </button>
           <div className="sidebar-section">
             <h3>Cloud Accounts</h3>
             
