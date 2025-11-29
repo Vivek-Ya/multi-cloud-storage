@@ -10,6 +10,7 @@ const FileList = ({
   onDownload,
   onDelete,
   onRename,
+  onCopy,
   onView,
 }) => {
   const formatBytes = (bytes) => {
@@ -107,6 +108,17 @@ const FileList = ({
               <button
                 type="button"
                 className="file-action-button"
+                title="Copy to..."
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCopy?.(file);
+                }}
+              >
+                📋
+              </button>
+              <button
+                type="button"
+                className="file-action-button"
                 title="Delete"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -180,6 +192,14 @@ const FileList = ({
                   onClick={() => onRename?.(file)}
                 >
                   Rename
+                </button>
+                <button
+                  type="button"
+                  className="file-action-button"
+                  title="Copy to..."
+                  onClick={() => onCopy?.(file)}
+                >
+                  Copy
                 </button>
                 <button
                   type="button"
