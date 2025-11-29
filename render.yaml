@@ -20,7 +20,7 @@ services:
       - key: DB_NAME
         fromDatabase:
           name: multicloud-db
-          property: name
+          property: database
       - key: DB_USERNAME
         fromDatabase:
           name: multicloud-db
