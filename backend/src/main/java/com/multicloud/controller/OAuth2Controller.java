@@ -16,6 +16,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -24,7 +25,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/oauth2")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "${app.cors.allowed-origins:http://localhost:3000}")
 public class OAuth2Controller {
 
     private static final Logger logger = LoggerFactory.getLogger(OAuth2Controller.class);
@@ -44,7 +45,11 @@ public class OAuth2Controller {
     @Autowired
     private UserRepository userRepository;
 
-    private static final String FRONTEND_BASE_URL = "http://localhost:3000";
+    private final String frontendBaseUrl;
+
+    public OAuth2Controller(@Value("${app.frontend.base-url:http://localhost:3000}") String frontendBaseUrl) {
+        this.frontendBaseUrl = frontendBaseUrl;
+    }
 
     // ==================== GOOGLE DRIVE ====================
     
@@ -87,7 +92,7 @@ public class OAuth2Controller {
             String sessionState = (String) session.getAttribute("oauth_state");
             if (state == null || sessionState == null || !sessionState.equals(state)) {
                 logger.warn("Invalid or missing OAuth state (google). session={}, request={}", sessionState, state);
-                return new RedirectView(FRONTEND_BASE_URL + "/dashboard?error=state_mismatch");
+                return new RedirectView(frontendBaseUrl + "/dashboard?error=state_mismatch");
             }
             
             // Exchange code for tokens
@@ -104,7 +109,7 @@ public class OAuth2Controller {
             String username = (String) session.getAttribute("oauth_username");
             if (username == null) {
                 logger.warn("No username in session, redirecting to login");
-                return new RedirectView(FRONTEND_BASE_URL + "/login?message=session_expired");
+                return new RedirectView(frontendBaseUrl + "/login?message=session_expired");
             }
 
             // Find user
@@ -127,11 +132,11 @@ public class OAuth2Controller {
             session.removeAttribute("oauth_provider");
             session.removeAttribute("oauth_state");
 
-            return new RedirectView(FRONTEND_BASE_URL + "/dashboard?connected=google");
+            return new RedirectView(frontendBaseUrl + "/dashboard?connected=google");
             
         } catch (Exception e) {
             logger.error("Error in Google OAuth callback", e);
-            return new RedirectView(FRONTEND_BASE_URL + "/dashboard?error=" + e.getMessage());
+            return new RedirectView(frontendBaseUrl + "/dashboard?error=" + e.getMessage());
         }
     }
 
@@ -177,7 +182,7 @@ public class OAuth2Controller {
             String sessionState = (String) session.getAttribute("oauth_state");
             if (state == null || sessionState == null || !sessionState.equals(state)) {
                 logger.warn("Invalid or missing OAuth state (onedrive). session={}, request={}", sessionState, state);
-                return new RedirectView(FRONTEND_BASE_URL + "/dashboard?error=state_mismatch");
+                return new RedirectView(frontendBaseUrl + "/dashboard?error=state_mismatch");
             }
             
             Map<String, String> tokens = oneDriveService.exchangeCode(code);
@@ -192,7 +197,7 @@ public class OAuth2Controller {
             String username = (String) session.getAttribute("oauth_username");
             if (username == null) {
                 logger.warn("No username in session");
-                return new RedirectView(FRONTEND_BASE_URL + "/login?message=session_expired");
+                return new RedirectView(frontendBaseUrl + "/login?message=session_expired");
             }
 
             User user = userRepository.findByUsername(username)
@@ -212,11 +217,11 @@ public class OAuth2Controller {
             session.removeAttribute("oauth_provider");
             session.removeAttribute("oauth_state");
 
-            return new RedirectView(FRONTEND_BASE_URL + "/dashboard?connected=onedrive");
+            return new RedirectView(frontendBaseUrl + "/dashboard?connected=onedrive");
             
         } catch (Exception e) {
             logger.error("Error in OneDrive OAuth callback", e);
-            return new RedirectView(FRONTEND_BASE_URL + "/dashboard?error=" + e.getMessage());
+            return new RedirectView(frontendBaseUrl + "/dashboard?error=" + e.getMessage());
         }
     }
 
@@ -261,7 +266,7 @@ public class OAuth2Controller {
             String sessionState = (String) session.getAttribute("oauth_state");
             if (state == null || sessionState == null || !sessionState.equals(state)) {
                 logger.warn("Invalid or missing OAuth state (dropbox). session={}, request={}", sessionState, state);
-                return new RedirectView(FRONTEND_BASE_URL + "/dashboard?error=state_mismatch");
+                return new RedirectView(frontendBaseUrl + "/dashboard?error=state_mismatch");
             }
             
             Map<String, String> tokens = dropboxService.exchangeCode(code);
@@ -275,7 +280,7 @@ public class OAuth2Controller {
             String username = (String) session.getAttribute("oauth_username");
             if (username == null) {
                 logger.warn("No username in session");
-                return new RedirectView(FRONTEND_BASE_URL + "/login?message=session_expired");
+                return new RedirectView(frontendBaseUrl + "/login?message=session_expired");
             }
 
             User user = userRepository.findByUsername(username)
@@ -295,11 +300,11 @@ public class OAuth2Controller {
             session.removeAttribute("oauth_provider");
             session.removeAttribute("oauth_state");
 
-            return new RedirectView(FRONTEND_BASE_URL + "/dashboard?connected=dropbox");
+            return new RedirectView(frontendBaseUrl + "/dashboard?connected=dropbox");
             
         } catch (Exception e) {
             logger.error("Error in Dropbox OAuth callback", e);
-            return new RedirectView(FRONTEND_BASE_URL + "/dashboard?error=" + e.getMessage());
+            return new RedirectView(frontendBaseUrl + "/dashboard?error=" + e.getMessage());
         }
     }
 
@@ -307,7 +312,7 @@ public class OAuth2Controller {
     
     private void redirectToError(HttpServletResponse response, String message) {
         try {
-            response.sendRedirect(FRONTEND_BASE_URL + "/dashboard?error=" + message);
+            response.sendRedirect(frontendBaseUrl + "/dashboard?error=" + message);
         } catch (IOException e) {
             logger.error("Failed to redirect to error page", e);
         }
