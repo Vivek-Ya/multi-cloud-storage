@@ -301,7 +301,7 @@ const cloudService = {
   // Get storage stats
   getStorageStats: async () => {
     try {
-      const response = await api.get('/cloud-accounts/storage/stats');
+      const response = await api.get('/cloud-accounts/analytics');
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
