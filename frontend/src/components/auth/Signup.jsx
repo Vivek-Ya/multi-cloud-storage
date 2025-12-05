@@ -136,14 +136,24 @@ const Signup = () => {
   if (success) {
     return (
       <div className="auth-container">
-        <div className="auth-card">
-          <div style={{ textAlign: 'center', padding: '20px' }}>
-            <h2 style={{ color: '#4caf50', marginBottom: '15px' }}>
-              ✓ Registration Successful!
-            </h2>
-            <p style={{ color: '#666' }}>
-              Redirecting to login page...
-            </p>
+        <div className="auth-layout">
+          <div className="auth-hero">
+            <div className="auth-hero-content">
+              <div className="auth-brand">Multi-Cloud Storage</div>
+              <h1>Account ready</h1>
+              <p>
+                You are all set to experience unified access across every cloud provider.
+              </p>
+            </div>
+          </div>
+          <div className="auth-card">
+            <div className="auth-header">
+              <h2>Registration complete</h2>
+              <p className="auth-subtitle">Redirecting you to the login portal.</p>
+            </div>
+            <div className="success-message">
+              Registration successful! Please hold on while we take you to the login screen.
+            </div>
           </div>
         </div>
       </div>
@@ -152,104 +162,128 @@ const Signup = () => {
 
   return (
     <div className="auth-container">
-      <div className="auth-card">
-        <h2>Create Your Account</h2>
-        
-        {displayError && <div className="error-message">{displayError}</div>}
+      <div className="auth-layout">
+        <div className="auth-hero">
+          <div className="auth-hero-content">
+            <div className="auth-brand">Multi-Cloud Storage</div>
+            <h1>Create your workspace</h1>
+            <p>
+              Launch a secure hub for all of your cloud accounts and keep your team aligned.
+            </p>
+            <ul className="auth-highlights">
+              <li>One-click onboarding across providers</li>
+              <li>Role-aware permissions for every teammate</li>
+              <li>Smart alerts for usage thresholds</li>
+            </ul>
+          </div>
+        </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-row">
+        <div className="auth-card">
+          <div className="auth-header">
+            <h2>Sign up</h2>
+            <p className="auth-subtitle">
+              Fill in your details and start orchestrating every cloud from one dashboard.
+            </p>
+          </div>
+
+          {displayError && <div className="error-message">{displayError}</div>}
+
+          <form onSubmit={handleSubmit}>
+            <div className="form-row">
+              <div className="form-group">
+                <label>First Name</label>
+                <input
+                  type="text"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  placeholder="First name"
+                  disabled={loading}
+                  autoComplete="given-name"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Last Name</label>
+                <input
+                  type="text"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  placeholder="Last name"
+                  disabled={loading}
+                  autoComplete="family-name"
+                />
+              </div>
+            </div>
+
             <div className="form-group">
-              <label>First Name</label>
+              <label>Username *</label>
               <input
                 type="text"
-                name="firstName"
-                value={formData.firstName}
+                name="username"
+                value={formData.username}
                 onChange={handleChange}
-                placeholder="First name"
+                required
+                placeholder="Choose a username (min 3 characters)"
                 disabled={loading}
-                autoComplete="given-name"
+                autoComplete="username"
               />
             </div>
 
             <div className="form-group">
-              <label>Last Name</label>
+              <label>Email *</label>
               <input
-                type="text"
-                name="lastName"
-                value={formData.lastName}
+                type="email"
+                name="email"
+                value={formData.email}
                 onChange={handleChange}
-                placeholder="Last name"
+                required
+                placeholder="your.email@example.com"
                 disabled={loading}
-                autoComplete="family-name"
+                autoComplete="email"
               />
             </div>
-          </div>
 
-          <div className="form-group">
-            <label>Username *</label>
-            <input
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              required
-              placeholder="Choose a username (min 3 characters)"
-              disabled={loading}
-              autoComplete="username"
-            />
-          </div>
+            <div className="form-group">
+              <label>Password *</label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                placeholder="At least 6 characters"
+                disabled={loading}
+                autoComplete="new-password"
+              />
+            </div>
 
-          <div className="form-group">
-            <label>Email *</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              placeholder="your.email@example.com"
-              disabled={loading}
-              autoComplete="email"
-            />
-          </div>
+            <div className="form-group">
+              <label>Confirm Password *</label>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+                placeholder="Re-enter your password"
+                disabled={loading}
+                autoComplete="new-password"
+              />
+            </div>
 
-          <div className="form-group">
-            <label>Password *</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              placeholder="At least 6 characters"
-              disabled={loading}
-              autoComplete="new-password"
-            />
-          </div>
+            <button type="submit" className="btn-primary" disabled={loading}>
+              {loading ? 'Creating Account...' : 'Sign Up'}
+            </button>
+          </form>
 
-          <div className="form-group">
-            <label>Confirm Password *</label>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              required
-              placeholder="Re-enter your password"
-              disabled={loading}
-              autoComplete="new-password"
-            />
-          </div>
+          <div className="auth-footer">Your data is encrypted in transit and at rest.</div>
 
-          <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Creating Account...' : 'Sign Up'}
-          </button>
-        </form>
-
-        <p className="auth-link">
-          Already have an account? <Link to="/login">Login</Link>
-        </p>
+          <p className="auth-link">
+            Already have an account? <Link to="/login">Login</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

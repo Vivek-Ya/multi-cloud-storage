@@ -47,7 +47,7 @@ const FileSearch = () => {
     <form className="file-search" onSubmit={handleSearch}>
       <input
         type="text"
-        placeholder="Search files..."
+        placeholder="Search by name, type or date…"
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         className="search-input"
