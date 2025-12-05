@@ -23,7 +23,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/cloud-accounts")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "${app.cors.allowed-origins:http://localhost:3000}")
 public class CloudAccountController {
 
     private static final Logger logger = LoggerFactory.getLogger(CloudAccountController.class);

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "${app.cors.allowed-origins:http://localhost:3000}")
 public class UserController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
